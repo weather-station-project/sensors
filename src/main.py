@@ -30,6 +30,7 @@ def main() -> int:
         logger.info(msg="Getting controllers to be initiated")
         controllers: List[Controller] = get_controllers()
         controllers.pop()
+        controllers.pop()
 
         return 0
     except Exception as e:
