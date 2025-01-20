@@ -1,12 +1,11 @@
-import sys
-from time import sleep
+import asyncio
 from typing import List
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.controllers.controllers import Controller, AmbientTemperatureController
 
-logger = get_logger(name=__name__)
+logger = get_logger(name="main")
 
 
 def get_enabled_controllers() -> List[Controller]:
@@ -19,7 +18,7 @@ def get_enabled_controllers() -> List[Controller]:
     return controllers
 
 
-def main() -> int:
+async def main() -> int:
     try:
         logger.info(msg="Application started")
 
@@ -29,7 +28,7 @@ def main() -> int:
 
         while True:
             logger.debug(msg=f"Sleeping {global_config.device.minutes_between_readings} minutes while sensors are getting readings")
-            sleep(global_config.device.minutes_between_readings * 60)
+            await asyncio.sleep(global_config.device.minutes_between_readings * 60)
 
             try:
                 for controller in controllers:
@@ -49,4 +48,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    asyncio.run(main())
