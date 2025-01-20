@@ -6,19 +6,25 @@ from src.helpers.helpers import get_bool_from_string
 
 class Environment:
     __DEVELOPMENT: str = "development"
+    __TESTING: str = "testing"
     __PRODUCTION: str = "production"
 
-    __slots__ = ["__is_production", "__read_only"]
+    __slots__ = ["__is_production", "__is_testing", "__read_only"]
 
     def __init__(self) -> None:
         environment: str = os.environ.get("ENVIRONMENT", self.__DEVELOPMENT)
 
         self.__is_production = environment == self.__PRODUCTION
+        self.__is_testing = environment == self.__TESTING
         self.__read_only = get_bool_from_string(os.environ.get("READ_ONLY", "False"))
 
     @property
     def is_production(self) -> bool:
         return self.__is_production
+
+    @property
+    def is_testing(self) -> bool:
+        return self.__is_testing
 
 
 class LoggingConfig:

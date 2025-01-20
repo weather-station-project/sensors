@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 from typing import List
 
 from src.colored_logging.colored_logging import get_logger
@@ -8,7 +9,7 @@ from src.controllers.controllers import Controller, AmbientTemperatureController
 logger = get_logger(name=__name__)
 
 
-def get_controllers() -> List[Controller]:
+def get_enabled_controllers() -> List[Controller]:
     controllers: List[Controller] = []
 
     if global_config.device.bme280_sensor_enabled:
@@ -18,19 +19,26 @@ def get_controllers() -> List[Controller]:
     return controllers
 
 
-def get_true():
-    # Stupid method for the UTs to avoid infinite loop
-    return True
-
-
 def main() -> int:
     try:
         logger.info(msg="Application started")
 
         logger.info(msg="Getting controllers to be initiated")
-        controllers: List[Controller] = get_controllers()
-        controllers.pop()
-        controllers.pop()
+        controllers: List[Controller] = get_enabled_controllers()
+        logger.debug(msg=f"Controllers to be initiated: {[controller.__class__.__name__ for controller in controllers]}")
+
+        while True:
+            logger.debug(msg=f"Sleeping {global_config.device.minutes_between_readings} minutes while sensors are getting readings")
+            sleep(global_config.device.minutes_between_readings * 60)
+
+            try:
+                for controller in controllers:
+                    controller.execute()
+
+                if global_config.environment.is_testing:
+                    break
+            except Exception:
+                pass
 
         return 0
     except Exception as e:

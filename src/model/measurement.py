@@ -12,7 +12,11 @@ class Measurement:
     speed: int | None
     direction: str | None
     amount: int | None
-    dateTime: datetime
+    date_time: datetime
 
     def to_dict(self) -> dict[str, int | str | datetime]:
-        return {key: value.isoformat() if isinstance(value, datetime) else value for key, value in self.__dict__.items() if value is not None}
+        return {
+            ("dateTime" if key == "date_time" else key): value.isoformat() if isinstance(value, datetime) else value
+            for key, value in self.__dict__.items()
+            if value is not None
+        }
