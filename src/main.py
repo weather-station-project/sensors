@@ -3,7 +3,7 @@ from typing import List
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.controllers.controllers import Controller, AmbientTemperatureController
+from src.controllers.controllers import Controller, AirMeasurementsController
 
 logger = get_logger(name="main")
 
@@ -12,8 +12,8 @@ def get_enabled_controllers() -> List[Controller]:
     controllers: List[Controller] = []
 
     if global_config.device.bme280_sensor_enabled:
-        logger.info(msg=f"Adding {AmbientTemperatureController.__name__}")
-        controllers.append(AmbientTemperatureController())
+        logger.info(msg=f"Adding {AirMeasurementsController.__name__}")
+        controllers.append(AirMeasurementsController())
 
     return controllers
 
@@ -27,12 +27,19 @@ async def main() -> int:
         logger.debug(msg=f"Controllers to be initiated: {[controller.__class__.__name__ for controller in controllers]}")
 
         while True:
-            logger.debug(msg=f"Sleeping {global_config.device.minutes_between_readings} minutes while sensors are getting readings")
-            await asyncio.sleep(global_config.device.minutes_between_readings * 60)
+            if global_config.environment.is_production:
+                seconds_waiting: int = global_config.device.minutes_between_readings * 60
+            elif global_config.environment.is_testing:
+                seconds_waiting: int = 1
+            else:
+                seconds_waiting: int = 20
+
+            logger.debug(msg=f"Sleeping {seconds_waiting} seconds while sensors are getting readings")
+            await asyncio.sleep(delay=seconds_waiting)
 
             try:
                 for controller in controllers:
-                    controller.execute()
+                    await controller.execute()
 
                 if global_config.environment.is_testing:
                     break
@@ -48,4 +55,4 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    exit(asyncio.run(main()))

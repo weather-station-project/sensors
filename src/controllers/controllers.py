@@ -4,7 +4,7 @@ from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.helpers.helpers import add_measurement_to_api
 from src.model.measurement import Measurement
-from src.services.services import Service, AmbientTemperatureService
+from src.services.services import Service, AirMeasurementService
 
 
 class Controller(ABC):
@@ -17,14 +17,16 @@ class Controller(ABC):
 
         self.__logger.debug(msg=f"Controller initialized with the service {self.__service.__class__.__name__} and API endpoint {self.__api_endpoint}")
 
-    def execute(self) -> None:
-        measurement: Measurement = self.__service.get_measurement()
+    async def execute(self) -> None:
+        measurement: Measurement = await self.__service.get_measurement()
         self.__logger.info(msg=f"Measurement obtained from {self.__service.__name__}: {measurement.to_dict()}")
 
-        add_measurement_to_api(url=self.__api_endpoint, user=global_config.api.user, password=global_config.api.password, measurement=measurement)
+        await add_measurement_to_api(
+            url=self.__api_endpoint, user=global_config.api.user, password=global_config.api.password, measurement=measurement
+        )
         self.__logger.info(msg=f"Measurement added through the endpoint {self.__api_endpoint} correctly")
 
 
-class AmbientTemperatureController(Controller):
+class AirMeasurementsController(Controller):
     def __init__(self) -> None:
-        super().__init__(service=AmbientTemperatureService(), api_endpoint=global_config.api.add_ambient_temperature_endpoint)
+        super().__init__(service=AirMeasurementService(), api_endpoint=global_config.api.add_air_measurement_endpoint)

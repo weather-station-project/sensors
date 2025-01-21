@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import final
+from typing import final, Optional
 
 
 @dataclass
 @final
 class Measurement:
-    temperature: int | None
-    humidity: int | None
-    pressure: int | None
-    speed: int | None
-    direction: str | None
-    amount: int | None
-    date_time: datetime
+    temperature: Optional[int] = None
+    humidity: Optional[int] = None
+    pressure: Optional[int] = None
+    speed: Optional[int] = None
+    direction: Optional[str] = None
+    amount: Optional[int] = None
+    date_time: Optional[datetime] = None
 
     def to_dict(self) -> dict[str, int | str | datetime]:
         return {
