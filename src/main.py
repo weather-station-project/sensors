@@ -3,7 +3,7 @@ from typing import List
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.controllers.controllers import Controller, AirMeasurementsController
+from src.controllers.controllers import Controller, AirMeasurementsController, GroundTemperatureController
 
 logger = get_logger(name="main")
 
@@ -14,6 +14,10 @@ def get_enabled_controllers() -> List[Controller]:
     if global_config.device.bme280_sensor_enabled:
         logger.info(msg=f"Adding {AirMeasurementsController.__name__}")
         controllers.append(AirMeasurementsController())
+
+    if global_config.device.ground_temperature_sensor_enabled:
+        logger.info(msg=f"Adding {GroundTemperatureController.__name__}")
+        controllers.append(GroundTemperatureController())
 
     return controllers
 

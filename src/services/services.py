@@ -5,6 +5,7 @@ from typing import List
 import bme280
 import smbus2
 from bme280 import compensated_readings
+from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
@@ -70,3 +71,19 @@ class AirMeasurementService(Service):
             return Measurement(temperature=data.temperature, pressure=data.pressure, humidity=data.humidity)
 
         return Measurement(temperature=0, pressure=0, humidity=0)
+
+
+class GroundTemperatureService(Service):
+    __slots__ = ["__sensor"]
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        if global_config.environment.is_production:
+            self.__sensor = AsyncW1ThermSensor()
+
+    async def get_reading(self) -> Measurement:
+        if global_config.environment.is_production:
+            return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
+
+        return Measurement(temperature=0)

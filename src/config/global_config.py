@@ -18,6 +18,10 @@ class Environment:
         self.__is_testing = environment == self.__TESTING
         self.__read_only = get_bool_from_string(os.environ.get("READ_ONLY", "False"))
 
+        if not self.__is_production:
+            # Needed to avoid loading modules out of RPi
+            os.environ["W1THERMSENSOR_NO_KERNEL_MODULE"] = "1"
+
     @property
     def is_production(self) -> bool:
         return self.__is_production
