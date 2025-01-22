@@ -3,7 +3,7 @@ from abc import ABC
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.helpers.helpers import add_measurement_to_api
-from src.model.measurement import Measurement
+from src.model.models import Measurement
 from src.services.services import Service, AirMeasurementService, GroundTemperatureService, RainfallService, WindMeasurementService
 
 

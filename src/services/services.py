@@ -10,8 +10,9 @@ from gpiozero import Button
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.model.measurement import Measurement
+from src.model.models import Measurement
 from src.sensors.anemometer import Anemometer
+from src.sensors.vane import Vane
 
 
 class Service(ABC):
@@ -136,16 +137,17 @@ class RainfallService(Service):
 
 
 class WindMeasurementService(Service):
-    __slots__ = ["__anemometer"]
+    __slots__ = ["__anemometer", "__vane"]
 
     def __init__(self, anemometer_port: int) -> None:
         super().__init__()
 
         if global_config.environment.is_production:
             self.__anemometer = Anemometer(port_number=anemometer_port)
+            self.__vane = Vane()
 
     async def get_reading(self) -> Measurement:
         if global_config.environment.is_production:
-            return Measurement(speed=int(self.__anemometer.get_speed()))
+            return Measurement(speed=int(self.__anemometer.get_speed()), direction=self.__vane.get_direction())
 
         return Measurement(speed=0, direction="N-W")
