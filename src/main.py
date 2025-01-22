@@ -3,7 +3,13 @@ from typing import List
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.controllers.controllers import Controller, AirMeasurementsController, GroundTemperatureController, RainfallController
+from src.controllers.controllers import (
+    Controller,
+    AirMeasurementsController,
+    GroundTemperatureController,
+    RainfallController,
+    WindMeasurementController,
+)
 
 logger = get_logger(name="main")
 
@@ -22,6 +28,10 @@ def get_enabled_controllers() -> List[Controller]:
     if global_config.device.rain_gauge_enabled:
         logger.info(msg=f"Adding {RainfallController.__name__}")
         controllers.append(RainfallController())
+
+    if global_config.device.anemometer_enabled:
+        logger.info(msg=f"Adding {WindMeasurementController.__name__}")
+        controllers.append(WindMeasurementController())
 
     return controllers
 

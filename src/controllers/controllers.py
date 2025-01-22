@@ -4,7 +4,7 @@ from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.helpers.helpers import add_measurement_to_api
 from src.model.measurement import Measurement
-from src.services.services import Service, AirMeasurementService, GroundTemperatureService, RainfallService
+from src.services.services import Service, AirMeasurementService, GroundTemperatureService, RainfallService, WindMeasurementService
 
 
 class Controller(ABC):
@@ -40,3 +40,11 @@ class GroundTemperatureController(Controller):
 class RainfallController(Controller):
     def __init__(self) -> None:
         super().__init__(service=RainfallService(), api_endpoint=global_config.api.add_rainfall_measurement_endpoint)
+
+
+class WindMeasurementController(Controller):
+    def __init__(self) -> None:
+        super().__init__(
+            service=WindMeasurementService(anemometer_port=global_config.device.anemometer_port),
+            api_endpoint=global_config.api.add_wind_measurement_endpoint,
+        )

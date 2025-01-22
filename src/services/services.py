@@ -11,6 +11,7 @@ from gpiozero import Button
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.model.measurement import Measurement
+from src.sensors.anemometer import Anemometer
 
 
 class Service(ABC):
@@ -132,3 +133,19 @@ class RainfallService(Service):
             self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
         except Exception:
             pass
+
+
+class WindMeasurementService(Service):
+    __slots__ = ["__anemometer"]
+
+    def __init__(self, anemometer_port: int) -> None:
+        super().__init__()
+
+        if global_config.environment.is_production:
+            self.__anemometer = Anemometer(port_number=anemometer_port)
+
+    async def get_reading(self) -> Measurement:
+        if global_config.environment.is_production:
+            return Measurement(speed=int(self.__anemometer.get_speed()))
+
+        return Measurement(speed=0, direction="N-W")
