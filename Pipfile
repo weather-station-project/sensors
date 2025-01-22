@@ -8,6 +8,7 @@ colorlog = "~=6.0"
 requests = "~=2.0"
 "rpi.bme280" = "~=0.0"
 w1thermsensor = "~=2.0"
+gpiozero = "~=2.0"
 
 [dev-packages]
 black = "~=24.0"

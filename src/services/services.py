@@ -6,6 +6,7 @@ import bme280
 import smbus2
 from bme280 import compensated_readings
 from w1thermsensor import AsyncW1ThermSensor, Unit
+from gpiozero import Button
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
@@ -13,17 +14,25 @@ from src.model.measurement import Measurement
 
 
 class Service(ABC):
-    __SECONDS_BETWEEN_READINGS: int = 15
+    _SECONDS_BETWEEN_READINGS: int = 15
 
-    __slots__ = ["_readings", "__getting_readings", "__logger"]
+    __slots__ = ["__readings", "__getting_readings", "_logger"]
 
     def __init__(self) -> None:
-        self.__logger = get_logger(name=self.__class__.__name__)
+        self._logger = get_logger(name=self.__class__.__name__)
 
-        self._readings = []
+        self.__readings = []
         self.__getting_readings = False
 
         asyncio.create_task(coro=self.__add_value_to_readings())
+
+    @property
+    def readings(self) -> List[Measurement]:
+        return self.__readings
+
+    @property
+    def getting_readings(self) -> bool:
+        return self.__getting_readings
 
     async def __add_value_to_readings(self) -> None:
         while True:
@@ -33,22 +42,18 @@ class Service(ABC):
 
                 reading: Measurement = await self.get_reading()
                 self.readings.append(reading)
-                self.__logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
+                self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
 
                 if global_config.environment.is_testing:
                     break
             except Exception:
                 pass
             finally:
-                await asyncio.sleep(delay=self.__SECONDS_BETWEEN_READINGS)
+                await asyncio.sleep(delay=self._SECONDS_BETWEEN_READINGS)
 
     @abstractmethod
     async def get_reading(self) -> Measurement:
         raise NotImplementedError("A sub-class must be implemented.")
-
-    @property
-    def readings(self) -> List[Measurement]:
-        return self._readings
 
     async def get_measurement(self) -> Measurement:
         pass
@@ -87,3 +92,43 @@ class GroundTemperatureService(Service):
             return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
 
         return Measurement(temperature=0)
+
+
+class RainfallService(Service):
+    __slots__ = ["__sensor"]
+
+    __BUCKET_SIZE_IN_MM: float = 0.2794
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        if global_config.environment.is_production:
+            self.__sensor = Button(pin=global_config.device.rain_gauge_port)
+            self.__sensor.when_pressed = self.get_reading
+
+    async def add_value_to_readings(self) -> None:
+        if global_config.environment.is_development:
+            while True:
+                try:
+                    if self.getting_readings:
+                        return
+
+                    await self.get_reading()
+                except Exception:
+                    pass
+                finally:
+                    await asyncio.sleep(delay=self._SECONDS_BETWEEN_READINGS)
+        else:
+            # This sensor does not need to read from the sensor as the when_pressed event is triggered only when water is detected
+            pass
+
+    async def get_reading(self) -> None:
+        try:
+            if self.getting_readings:
+                return
+
+            reading: Measurement = Measurement(amount=1)
+            self.readings.append(reading)
+            self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
+        except Exception:
+            pass

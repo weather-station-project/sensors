@@ -9,12 +9,13 @@ class Environment:
     __TESTING: str = "testing"
     __PRODUCTION: str = "production"
 
-    __slots__ = ["__is_production", "__is_testing", "__read_only"]
+    __slots__ = ["__is_production", "__is_testing", "__is_development", "__read_only"]
 
     def __init__(self) -> None:
         environment: str = os.environ.get("ENVIRONMENT", self.__DEVELOPMENT)
 
         self.__is_production = environment == self.__PRODUCTION
+        self.__is_development = environment == self.__DEVELOPMENT
         self.__is_testing = environment == self.__TESTING
         self.__read_only = get_bool_from_string(os.environ.get("READ_ONLY", "False"))
 
@@ -25,6 +26,10 @@ class Environment:
     @property
     def is_production(self) -> bool:
         return self.__is_production
+
+    @property
+    def is_development(self) -> bool:
+        return self.__is_development
 
     @property
     def is_testing(self) -> bool:
