@@ -11,6 +11,7 @@ from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
+from src.exceptions.exceptions import MeasurementException
 from src.model.models import Measurement
 from src.sensors.anemometer import Anemometer
 from src.sensors.vane import Vane
@@ -27,7 +28,7 @@ class Service(ABC):
         self.__readings = []
         self.__getting_readings = False
 
-        asyncio.create_task(coro=self.__add_value_to_readings())
+        asyncio.create_task(coro=self._add_value_to_readings())
 
     @property
     def readings(self) -> List[Measurement]:
@@ -37,7 +38,7 @@ class Service(ABC):
     def getting_readings(self) -> bool:
         return self.__getting_readings
 
-    async def __add_value_to_readings(self) -> None:
+    async def _add_value_to_readings(self) -> None:
         while True:
             try:
                 if self.__getting_readings:
@@ -49,8 +50,8 @@ class Service(ABC):
 
                 if global_config.environment.is_testing:
                     break
-            except Exception:
-                pass
+            except Exception as e:
+                self._logger.exception(msg="Error adding the reading to the list of samples", exc_info=e)
             finally:
                 await asyncio.sleep(delay=self._SECONDS_BETWEEN_READINGS)
 
@@ -59,9 +60,11 @@ class Service(ABC):
             self.__getting_readings = True
 
             if len(self.__readings) == 0:
-                pass  # raise SensorException(class_name=sensor_name, message=f'The sensor "{sensor_name}" did not report any read.')
+                raise ValueError(f"No readings from the service {self.__class__.__name__}")
 
             return await self._get_measurement_average()
+        except Exception as e:
+            raise MeasurementException(service_name=self.__class__.__name__, e=e)
         finally:
             self.__readings.clear()
             self.__getting_readings = False
@@ -142,7 +145,7 @@ class RainfallService(Service):
             self.__sensor = Button(pin=global_config.device.rain_gauge_port)
             self.__sensor.when_pressed = self.get_reading
 
-    async def add_value_to_readings(self) -> None:
+    async def _add_value_to_readings(self) -> None:
         if global_config.environment.is_development:
             while True:
                 try:
@@ -150,8 +153,8 @@ class RainfallService(Service):
                         return
 
                     await self.get_reading()
-                except Exception:
-                    pass
+                except Exception as e:
+                    self._logger.exception(msg="Error adding the reading to the list of samples", exc_info=e)
                 finally:
                     await asyncio.sleep(delay=self._SECONDS_BETWEEN_READINGS)
         else:
@@ -159,15 +162,12 @@ class RainfallService(Service):
             pass
 
     async def get_reading(self) -> None:
-        try:
-            if self.getting_readings:
-                return
+        if self.getting_readings:
+            return
 
-            reading: Measurement = Measurement(amount=1)
-            self.readings.append(reading)
-            self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
-        except Exception:
-            pass
+        reading: Measurement = Measurement(amount=1)
+        self.readings.append(reading)
+        self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
 
     async def _get_measurement_average(self) -> Measurement:
         return Measurement(amount=int(len(self.readings) * self.__BUCKET_SIZE_IN_MM))

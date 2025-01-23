@@ -19,7 +19,7 @@ class Controller(ABC):
 
     async def get_measurement(self) -> Measurement:
         measurement: Measurement = await self.__service.get_measurement()
-        self.__logger.info(msg=f"Measurement obtained from {self.__service.__name__}: {measurement.to_dict()}")
+        self.__logger.info(msg=f"Measurement obtained from {self.__service.__class__.__name__}: {measurement.to_dict()}")
 
         return measurement
 
