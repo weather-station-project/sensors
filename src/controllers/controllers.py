@@ -17,10 +17,13 @@ class Controller(ABC):
 
         self.__logger.debug(msg=f"Controller initialized with the service {self.__service.__class__.__name__} and API endpoint {self.__api_endpoint}")
 
-    async def execute(self) -> None:
+    async def get_measurement(self) -> Measurement:
         measurement: Measurement = await self.__service.get_measurement()
         self.__logger.info(msg=f"Measurement obtained from {self.__service.__name__}: {measurement.to_dict()}")
 
+        return measurement
+
+    async def add_measurement(self, measurement: Measurement) -> None:
         await add_measurement_to_api(
             url=self.__api_endpoint, user=global_config.api.user, password=global_config.api.password, measurement=measurement
         )

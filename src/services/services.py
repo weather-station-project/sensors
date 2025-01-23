@@ -1,12 +1,13 @@
 import asyncio
 from abc import ABC, abstractmethod
+from statistics import mode, mean
 from typing import List
 
 import bme280
 import smbus2
 from bme280 import compensated_readings
-from w1thermsensor import AsyncW1ThermSensor, Unit
 from gpiozero import Button
+from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
@@ -53,12 +54,25 @@ class Service(ABC):
             finally:
                 await asyncio.sleep(delay=self._SECONDS_BETWEEN_READINGS)
 
+    async def get_measurement(self) -> Measurement:
+        try:
+            self.__getting_readings = True
+
+            if len(self.__readings) == 0:
+                pass  # raise SensorException(class_name=sensor_name, message=f'The sensor "{sensor_name}" did not report any read.')
+
+            return await self._get_measurement_average()
+        finally:
+            self.__readings.clear()
+            self.__getting_readings = False
+
     @abstractmethod
     async def get_reading(self) -> Measurement:
         raise NotImplementedError("A sub-class must be implemented.")
 
-    async def get_measurement(self) -> Measurement:
-        pass
+    @abstractmethod
+    async def _get_measurement_average(self) -> Measurement:
+        raise NotImplementedError("A sub-class must be implemented.")
 
 
 class AirMeasurementService(Service):
@@ -79,6 +93,23 @@ class AirMeasurementService(Service):
 
         return Measurement(temperature=0, pressure=0, humidity=0)
 
+    async def _get_measurement_average(self) -> Measurement:
+        temperature: float = 0
+        pressure: float = 0
+        humidity: float = 0
+        number_of_readings: int = len(self.readings)
+
+        for reading in self.readings:
+            temperature += reading.temperature
+            pressure += reading.pressure
+            humidity += reading.humidity
+
+        return Measurement(
+            temperature=int(temperature / number_of_readings),
+            pressure=int(pressure / number_of_readings),
+            humidity=int(humidity / number_of_readings),
+        )
+
 
 class GroundTemperatureService(Service):
     __slots__ = ["__sensor"]
@@ -94,6 +125,9 @@ class GroundTemperatureService(Service):
             return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
 
         return Measurement(temperature=0)
+
+    async def _get_measurement_average(self) -> Measurement:
+        return Measurement(temperature=int(mean([reading.temperature for reading in self.readings])))
 
 
 class RainfallService(Service):
@@ -135,6 +169,9 @@ class RainfallService(Service):
         except Exception:
             pass
 
+    async def _get_measurement_average(self) -> Measurement:
+        return Measurement(amount=int(len(self.readings) * self.__BUCKET_SIZE_IN_MM))
+
 
 class WindMeasurementService(Service):
     __slots__ = ["__anemometer", "__vane"]
@@ -151,3 +188,8 @@ class WindMeasurementService(Service):
             return Measurement(speed=int(self.__anemometer.get_speed()), direction=self.__vane.get_direction())
 
         return Measurement(speed=0, direction="N-W")
+
+    async def _get_measurement_average(self) -> Measurement:
+        return Measurement(
+            speed=int(mean([reading.speed for reading in self.readings])), direction=mode([reading.direction for reading in self.readings])
+        )

@@ -10,6 +10,7 @@ from src.controllers.controllers import (
     RainfallController,
     WindMeasurementController,
 )
+from src.model.models import Measurement
 
 logger = get_logger(name="main")
 
@@ -57,7 +58,10 @@ async def main() -> int:
 
             try:
                 for controller in controllers:
-                    await controller.execute()
+                    measurement: Measurement = await controller.get_measurement()
+                    await controller.add_measurement(measurement)
+
+                    # TODO ADD SOCKETIO EMIT HERE
 
                 if global_config.environment.is_testing:
                     break
