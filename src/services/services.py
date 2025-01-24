@@ -129,10 +129,10 @@ class GroundTemperatureService(Service):
         if global_config.environment.is_production:
             return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
 
-        return Measurement(temperature=0, date_time=datetime.now())
+        return Measurement(temperature=0)
 
     async def _get_measurement_average(self) -> Measurement:
-        return Measurement(temperature=int(mean([reading.temperature for reading in self.readings])))
+        return Measurement(temperature=int(mean([reading.temperature for reading in self.readings])), date_time=datetime.now())
 
 
 class RainfallService(Service):

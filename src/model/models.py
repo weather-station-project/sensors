@@ -16,7 +16,7 @@ class Measurement:
 
     def to_dict(self) -> dict[str, int | str | datetime]:
         return {
-            ("dateTime" if key == "date_time" else key): value.isoformat() if isinstance(value, datetime) else value
+            ("dateTime" if key == "date_time" else key): value.strftime("%Y-%m-%dT%H:%M:%S") if isinstance(value, datetime) else value
             for key, value in self.__dict__.items()
             if value is not None
         }
