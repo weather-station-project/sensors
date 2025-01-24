@@ -10,7 +10,7 @@ from src.controllers.controllers import (
     RainfallController,
     WindMeasurementController,
 )
-from src.exceptions.exceptions import MeasurementException
+from src.exceptions.exceptions import GettingMeasurementException, AddingMeasurementException
 from src.model.models import Measurement
 
 logger = get_logger(name="main")
@@ -66,10 +66,12 @@ async def main() -> int:
 
                 if global_config.environment.is_testing:
                     break
-            except MeasurementException as e:
+            except GettingMeasurementException as e:
                 logger.error(msg=f"Error getting a measurement from the service {e.service_name}", exc_info=e)
+            except AddingMeasurementException as e:
+                logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
             except Exception as e:
-                logger.exception("Unexpected error getting a measurement", exc_info=e)
+                logger.exception("Unexpected error getting or adding a measurement", exc_info=e)
 
         return 0
     except Exception as e:

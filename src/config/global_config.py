@@ -52,6 +52,7 @@ class ApiConfig:
         "__user",
         "__password",
         "__root_url",
+        "__auth_url",
         "__add_air_measurement_endpoint",
         "__add_ground_temperature_endpoint",
         "__add_wind_measurement_endpoint",
@@ -62,6 +63,7 @@ class ApiConfig:
         self.__user = os.environ.get("USER", "sensors")
         self.__password = os.environ.get("PASSWORD", "123456")
         self.__root_url = os.environ.get("ROOT_URL", "http://localhost:8080")
+        self.__auth_url = self.__root_url + "/auth"
         self.__add_air_measurement_endpoint = self.__root_url + "/measurements/air-measurement"
         self.__add_ground_temperature_endpoint = self.__root_url + "/measurements/ground-temperature"
         self.__add_wind_measurement_endpoint = self.__root_url + "/measurements/wind-measurement"
@@ -78,6 +80,10 @@ class ApiConfig:
     @property
     def root_url(self) -> str:
         return self.__root_url
+
+    @property
+    def auth_url(self) -> str:
+        return self.__auth_url
 
     @property
     def add_air_measurement_endpoint(self) -> str:

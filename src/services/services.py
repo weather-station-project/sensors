@@ -1,5 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
+from datetime import datetime
 from statistics import mode, mean
 from typing import List
 
@@ -11,7 +12,7 @@ from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.exceptions.exceptions import MeasurementException
+from src.exceptions.exceptions import GettingMeasurementException
 from src.model.models import Measurement
 from src.sensors.anemometer import Anemometer
 from src.sensors.vane import Vane
@@ -64,7 +65,7 @@ class Service(ABC):
 
             return await self._get_measurement_average()
         except Exception as e:
-            raise MeasurementException(service_name=self.__class__.__name__, e=e)
+            raise GettingMeasurementException(service_name=self.__class__.__name__, e=e)
         finally:
             self.__readings.clear()
             self.__getting_readings = False
@@ -111,6 +112,7 @@ class AirMeasurementService(Service):
             temperature=int(temperature / number_of_readings),
             pressure=int(pressure / number_of_readings),
             humidity=int(humidity / number_of_readings),
+            date_time=datetime.now(),
         )
 
 
@@ -127,7 +129,7 @@ class GroundTemperatureService(Service):
         if global_config.environment.is_production:
             return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
 
-        return Measurement(temperature=0)
+        return Measurement(temperature=0, date_time=datetime.now())
 
     async def _get_measurement_average(self) -> Measurement:
         return Measurement(temperature=int(mean([reading.temperature for reading in self.readings])))
@@ -170,7 +172,7 @@ class RainfallService(Service):
         self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
 
     async def _get_measurement_average(self) -> Measurement:
-        return Measurement(amount=int(len(self.readings) * self.__BUCKET_SIZE_IN_MM))
+        return Measurement(amount=int(len(self.readings) * self.__BUCKET_SIZE_IN_MM), date_time=datetime.now())
 
 
 class WindMeasurementService(Service):
@@ -191,5 +193,7 @@ class WindMeasurementService(Service):
 
     async def _get_measurement_average(self) -> Measurement:
         return Measurement(
-            speed=int(mean([reading.speed for reading in self.readings])), direction=mode([reading.direction for reading in self.readings])
+            speed=int(mean([reading.speed for reading in self.readings])),
+            direction=mode([reading.direction for reading in self.readings]),
+            date_time=datetime.now(),
         )

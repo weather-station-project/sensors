@@ -1,18 +1,21 @@
 from abc import ABC
 
+from src.api.api import MeasurementApiClient
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.helpers.helpers import add_measurement_to_api
 from src.model.models import Measurement
 from src.services.services import Service, AirMeasurementService, GroundTemperatureService, RainfallService, WindMeasurementService
 
 
 class Controller(ABC):
-    __slots__ = ["__service", "__api_endpoint", "__logger"]
+    __slots__ = ["__service", "__api_endpoint", "__logger", "__api_client"]
 
     def __init__(self, service: Service, api_endpoint: str) -> None:
         self.__service = service
         self.__api_endpoint = api_endpoint
+        self.__api_client = MeasurementApiClient(
+            auth_url=global_config.api.auth_url, user=global_config.api.user, password=global_config.api.password
+        )
         self.__logger = get_logger(name=self.__class__.__name__)
 
         self.__logger.debug(msg=f"Controller initialized with the service {self.__service.__class__.__name__} and API endpoint {self.__api_endpoint}")
@@ -24,9 +27,7 @@ class Controller(ABC):
         return measurement
 
     async def add_measurement(self, measurement: Measurement) -> None:
-        await add_measurement_to_api(
-            url=self.__api_endpoint, user=global_config.api.user, password=global_config.api.password, measurement=measurement
-        )
+        await self.__api_client.add_measurement(end_point=self.__api_endpoint, measurement=measurement)
         self.__logger.info(msg=f"Measurement added through the endpoint {self.__api_endpoint} correctly")
 
 

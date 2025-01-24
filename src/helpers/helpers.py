@@ -1,16 +1,13 @@
-import requests
-
-from src.model.models import Measurement
-
-
 def get_bool_from_string(value: str) -> bool:
     return value.lower() in ["true", "t", "1"]
 
 
-async def add_measurement_to_api(url: str, user: str, password: str, measurement: Measurement) -> None:
-    try:
-        # TODO AUTH!
-        response = requests.post(url, auth=(user, password), json=measurement.to_dict())
-        response.raise_for_status()
-    except Exception as e:
-        raise e
+class SingletonMeta(type):
+    __instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls.__instances:
+            instance = super().__call__(*args, **kwargs)
+            cls.__instances[cls] = instance
+
+        return cls.__instances[cls]
