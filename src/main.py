@@ -60,7 +60,11 @@ async def main() -> int:
             try:
                 for controller in controllers:
                     measurement: Measurement = await controller.get_measurement()
-                    await controller.add_measurement(measurement)
+
+                    if global_config.environment.read_only:
+                        logger.info(msg=f"Read only enabled. Skipping adding measurement {measurement.to_dict()}")
+                    else:
+                        await controller.add_measurement(measurement)
 
                     # TODO ADD SOCKETIO EMIT HERE
 

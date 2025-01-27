@@ -35,6 +35,10 @@ class Environment:
     def is_testing(self) -> bool:
         return self.__is_testing
 
+    @property
+    def read_only(self) -> bool:
+        return self.__read_only
+
 
 class LoggingConfig:
     __slots__ = ["__level"]
