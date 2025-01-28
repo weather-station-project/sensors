@@ -28,6 +28,7 @@ COPY src ./src
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
 RUN pipenv install --system --deploy
+RUN pip uninstall yarl propcache -y && pip install yarl propcache # fix segmentation fault problems
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
