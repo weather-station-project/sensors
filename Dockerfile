@@ -29,10 +29,5 @@ RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel set
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
 RUN pipenv install --system --deploy
 
-# Change to a non-root user
-RUN adduser -D sensors-reader
-RUN chown -R sensors-reader:sensors-reader /app
-USER sensors-reader
-
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
