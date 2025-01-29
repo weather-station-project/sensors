@@ -1,4 +1,4 @@
-FROM --platform=linux/arm/v6 python:3.12-alpine
+FROM python:3.12-alpine
 
 # Setting PYTHONUNBUFFERED to a non-empty value different from 0 ensures that the python output i.e. the stdout and
 # stderr streams are sent straight to terminal (e.g. your container log) without being first buffered and that
@@ -27,7 +27,7 @@ COPY src ./src
 # Install Python references
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
-RUN pipenv install --system --deploy
+# RUN pipenv install --system --deploy
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
