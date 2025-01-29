@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM python:3.12-alpine
+FROM --platform=linux/arm/v6 python:python:3.12-alpine
 
 # Setting PYTHONUNBUFFERED to a non-empty value different from 0 ensures that the python output i.e. the stdout and
 # stderr streams are sent straight to terminal (e.g. your container log) without being first buffered and that
