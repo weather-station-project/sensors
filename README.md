@@ -18,6 +18,7 @@ pipenv --python 3.12
 - Install the dependencies, it is similar to the npm install command from NodeJS projects.
 
 ```
+export PIPENV_URL=https://pypi.org/simple
 pipenv install --dev
 ```
 

@@ -1,17 +1,12 @@
 [[source]]
-url = "https://www.piwheels.org/simple"
+url = "${PIPENV_URL}"
 verify_ssl = true
-name = "piwheels"
-
-[[source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
+name = "pypi-piwheels"
 
 [packages]
 colorlog = "~=6.0"
 requests = "~=2.0"
-"rpi.bme280" = "~=0.0"
+rpi-bme280 = "~=0.0"
 w1thermsensor = "~=2.0"
 gpiozero = "~=2.0"
 aiohttp = "~=3.0"
