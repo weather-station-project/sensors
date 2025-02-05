@@ -27,8 +27,9 @@ COPY src ./src
 # Install Python references
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
-RUN pipenv lock
-RUN pipenv install --system --deploy
+# RUN pipenv lock
+# RUN pipenv install --system --deploy
+RUN pipenv install
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
