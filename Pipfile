@@ -4,13 +4,22 @@ verify_ssl = true
 name = "pypi-piwheels"
 
 [packages]
-colorlog = "~=6.0"
-requests = "~=2.0"
-rpi-bme280 = "~=0.0"
-w1thermsensor = "~=2.0"
-gpiozero = "~=2.0"
-aiohttp = "~=3.0"
-tenacity = "~=9.0"
+colorlog = "*"
+requests = "*"
+rpi-bme280 = "*"
+w1thermsensor = "*"
+gpiozero = "*"
+aiohttp = "*"
+tenacity = "*"
+
+#[packages]
+#colorlog = "~=6.0"
+#requests = "~=2.0"
+#rpi-bme280 = "~=0.0"
+#w1thermsensor = "~=2.0"
+#gpiozero = "~=2.0"
+#aiohttp = "~=3.0"
+#tenacity = "~=9.0"
 
 [dev-packages]
 black = "~=24.0"
