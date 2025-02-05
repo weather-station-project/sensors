@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "35bc6c02a6f64c846e02935007fd1763a14aacdb274243f44f91db69b0994616"
+            "sha256": "84952a2913269eaa9ac77a9d4e7a923cbbac43dc1a59eb287521e7458535741e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -9,8 +9,8 @@
         },
         "sources": [
             {
-                "name": "pypi-piwheels",
-                "url": "${PIPENV_URL}",
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
                 "verify_ssl": true
             }
         ]
@@ -103,7 +103,7 @@
                 "sha256:ffa336210cf9cd8ed117011085817d00abe4c08f99968deef0013ea283547204",
                 "sha256:ffb3dc385f6bb1568aa974fe65da84723210e5d9707e360e9ecb51f59406cd2e"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==3.11.11"
         },
@@ -242,7 +242,7 @@
                 "sha256:5906e71acd67cb07a71e779c47c4bcb45fb8c2993eebe9e5adcd6a6f1b283eff",
                 "sha256:bfba54a1b93b94f54e1f4fe48395725a3d92fd2a4af702f6bd70946bdc0c6ac2"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.6'",
             "version": "==6.9.0"
         },
@@ -356,7 +356,7 @@
                 "sha256:8f621de357171d574c0b7ea0e358cb66e560818a47b0eeedf41ce1cdbd20c70b",
                 "sha256:d4ea1952689ec7e331f9d4ebc9adb15f1d01c2c9dcfabb72e752c9869ab7e97e"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==2.0.1"
         },
@@ -566,7 +566,7 @@
                 "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760",
                 "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==2.32.3"
         },
@@ -575,7 +575,7 @@
                 "sha256:5b0e9309a2d518f9e120f1343ed4fc81ff69b196db748eabf96dd575a9f48c5d",
                 "sha256:9dee82a9c4eef23606dc04e4f582821ebafb21fb943dbf588cf38fc0b636fc39"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "version": "==0.2.4"
         },
         "setuptools": {
@@ -598,7 +598,7 @@
                 "sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b",
                 "sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==9.0.0"
         },
@@ -615,7 +615,7 @@
                 "sha256:16f3236d401be809fe46aa4166c4441cc962b398a561aa60659e1fbe553aac94",
                 "sha256:9fbc0ae0dd66cd9b54c6d62ed7bab2b88e148c987fe7d5060f476f90e81c2270"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.3.0"
         },
@@ -734,7 +734,7 @@
                 "sha256:f9da3333530dbcecc1be13e69c250ed8dfa67f43c4005fb537bb426e19200d50",
                 "sha256:fe4d6476887de70546212c99ac9bd803d90b42fc4767f058a0baa895013fbb3e"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==24.10.0"
         },
@@ -774,7 +774,7 @@
                 "sha256:049d058491e228e03e67b390f311bbf88fce2dbaa8fa673e7aea87b7198b8d38",
                 "sha256:597477df7860daa5aa0fdd84bf5208a043ab96b8e96ab708770ae0364dd03213"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_full_version >= '3.8.1'",
             "version": "==7.1.1"
         },
@@ -839,7 +839,7 @@
                 "sha256:ae3f018575a588e30dfddfab9a05448bfbd6b73d78709617b5a2b853549716d4",
                 "sha256:d29e7cb346295bcc1cc75fc3e92e343495e3ea0196c9ec6ba53f49f10ab6ae7b"
             ],
-            "index": "pypi-piwheels",
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==4.1.0"
         },
