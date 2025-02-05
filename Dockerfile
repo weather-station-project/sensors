@@ -20,15 +20,17 @@ RUN apk add --no-cache gcc \
 WORKDIR /app
 
 # Copy needed files
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
 COPY src ./src
 
 # Install Python references
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
-RUN pip install --root-user-action=ignore --no-cache-dir pipenv
-RUN pipenv requirements > requirements.txt
-RUN pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
+RUN pip install --root-user-action=ignore --no-cache-dir colorlog~=6.0 \
+                                                         requests~=2.0 \
+                                                         rpi-bme280~=0.0 \
+                                                         w1thermsensor~=2.0 \
+                                                         gpiozero~=2.0 \
+                                                         aiohttp~=3.0 \
+                                                         tenacity~=9.0
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
