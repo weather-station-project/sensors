@@ -1,0 +1,25 @@
+services:
+  app:
+    container_name: sensors-reader
+    image: weatherstationproject/sensors
+    privileged: true
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=production
+      - READ_ONLY=false
+      - LOG_LEVEL=info
+      - USER=sensors
+      - PASSWORD=/run/secrets/password
+      - ROOT_URL=http://192.168.1.1:8080
+      - BME280_SENSOR_ENABLED=false
+      - GROUND_TEMPERATURE_SENSOR_ENABLED=false
+      - RAIN_GAUGE_ENABLED=false
+      - ANEMOMETER_ENABLED=false
+      - TZ=Europe/Madrid
+
+secrets:
+   password:
+     file: password.txt
