@@ -46,6 +46,9 @@ async def main() -> int:
         controllers: List[Controller] = get_enabled_controllers()
         logger.debug(msg=f"Controllers to be initiated: {[controller.__class__.__name__ for controller in controllers]}")
 
+        if len(controllers) == 0:
+            raise Exception("No controllers were enabled. Please enable at least one controller in the configuration")
+
         while True:
             if global_config.environment.is_production:
                 seconds_waiting: int = global_config.device.minutes_between_readings * 60
