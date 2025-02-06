@@ -14,7 +14,8 @@ RUN apk add --no-cache gcc \
                        build-base \
                        py3-smbus \
                        i2c-tools \
-                       linux-headers
+                       linux-headers \
+                       py3-gpiozero
 
 # Change workdir to the app folder
 WORKDIR /app
