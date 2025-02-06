@@ -11,8 +11,6 @@ rpi-bme280 = "~=0.0"
 gpiozero = "~=2.0"
 aiohttp = "~=3.0"
 tenacity = "~=9.0"
-# Conditionally install RPi.GPIO only on Raspberry Pi
-RPi.GPIO = { version = "~=0.0", markers = "platform_machine ~= 'arm' and sys_platform === 'linux'" }
 
 [dev-packages]
 black = "~=24.0"

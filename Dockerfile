@@ -28,7 +28,7 @@ COPY src ./src
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
 RUN pipenv install --system --deploy
-RUN pipenv install --system RPi.GPIO~=0.0
+RUN pip install RPi.GPIO
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
