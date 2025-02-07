@@ -15,7 +15,8 @@ RUN apk add --no-cache gcc \
                        py3-smbus \
                        i2c-tools \
                        linux-headers \
-                       py3-gpiozero
+                       swig \
+                       py3-setuptools
 
 # Change workdir to the app folder
 WORKDIR /app
@@ -25,11 +26,27 @@ COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 COPY src ./src
 
+# Install manually lgpio
+# https://stackoverflow.com/questions/75542224/runtimeerror-failed-to-add-edge-detection-on-raspberrypi
+# https://github.com/joan2937/lg
+RUN wget https://github.com/joan2937/lg/archive/master.zip
+RUN unzip master.zip
+WORKDIR lg-master
+RUN make
+RUN make install || true
+WORKDIR ..
+RUN rm -rf lg-master
+
 # Install Python references
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv
 RUN pipenv install --system --deploy
-RUN pip install RPi.GPIO
+RUN pip rpi-lgpio
+
+# Change to a non-root user
+RUN adduser -D sensors
+RUN chown -R sensors:sensors /app
+USER sensors
 
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
