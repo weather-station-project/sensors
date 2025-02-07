@@ -39,9 +39,8 @@ RUN rm -rf lg-master
 
 # Install Python references
 RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel setuptools
-RUN pip install --root-user-action=ignore --no-cache-dir pipenv
+RUN pip install --root-user-action=ignore --no-cache-dir pipenv rpi-lgpio
 RUN pipenv install --system --deploy
-RUN pip rpi-lgpio
 
 # Change to a non-root user
 RUN adduser -D sensors
