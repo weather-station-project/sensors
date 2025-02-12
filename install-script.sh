@@ -13,8 +13,9 @@ log_info () {
   print_log "$WHITE" 'INFO' "$1"
 }
 
-# Variables
+# Variables and parameters
 folder="sensors-master"
+version="$1"
 
 # Stop all the existing containers
 log_info 'Stopping all the existing containers'
@@ -25,9 +26,14 @@ docker rm -f "$(docker ps -aq)" || true
 log_info 'Cleaning all the Docker stuff to save space'
 docker system prune --all --force
 
-# Download the latest edge version of the app (ideally, replace this with the latest release)
-log_info 'Downloading the latest edge version of the app'
-curl -L -o app.zip https://github.com/weather-station-project/sensors/archive/refs/heads/master.zip
+# Download the specific version of the app
+if [ "$version" = "master" ]; then
+  log_info 'Downloading the latest edge version of the app'
+  curl -L -o app.zip "https://github.com/weather-station-project/sensors/archive/refs/heads/master.zip"
+else
+  log_info "Downloading version $version of the app"
+  curl -L -o app.zip "https://github.com/weather-station-project/sensors/archive/refs/tags/$version.zip"
+fi
 
 # Unzip the app and remove the zip file
 log_info 'Unzipping the app and removing the zip file'
