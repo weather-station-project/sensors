@@ -42,10 +42,5 @@ RUN pip install --root-user-action=ignore --no-cache-dir --upgrade pip wheel set
 RUN pip install --root-user-action=ignore --no-cache-dir pipenv rpi-lgpio
 RUN pipenv install --system --deploy
 
-# Change to a non-root user
-RUN adduser -D sensors
-RUN chown -R sensors:sensors /app
-USER sensors
-
 # Launch application
 ENTRYPOINT ["python", "src/main.py"]
