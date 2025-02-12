@@ -20,10 +20,3 @@ class Measurement:
             for key, value in self.__dict__.items()
             if value is not None
         }
-
-
-@dataclass
-@final
-class VaneAngleDirection:
-    angle: float
-    direction: str
