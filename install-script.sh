@@ -19,8 +19,8 @@ log_error () {
 }
 
 # Variables and parameters
-app_folder="app"
 version="$1"
+app_folder="sensors-$version"
 
 # Check if version is null
 if [ -z "$version" ]; then
