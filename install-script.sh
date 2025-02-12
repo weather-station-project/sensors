@@ -30,7 +30,9 @@ fi
 
 # Stop all the existing containers
 log_info 'Stopping all the existing containers'
-docker compose --file "./$app_folder/docker-compose.yml" down
+if [ -d "$app_folder" ]; then
+  docker compose --file "./$app_folder/docker-compose.yml" down
+fi
 docker rm -f "$(docker ps -aq)" || true
 
 # Clean all the Docker stuff to save space
