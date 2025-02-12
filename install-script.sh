@@ -13,6 +13,11 @@ log_info () {
   print_log "$WHITE" 'INFO' "$1"
 }
 
+log_error () {
+  RED='\033[0;31m'
+  print_log "$RED" 'ERROR' "$1"
+}
+
 # Variables and parameters
 app_folder="app"
 version="$1"
