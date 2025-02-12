@@ -145,7 +145,7 @@ class RainfallService(Service):
 
         if global_config.environment.is_production:
             self.__sensor = Button(pin=global_config.device.rain_gauge_port)
-            self.__sensor.when_pressed = self.get_reading
+            self.__sensor.when_pressed = self._sync_get_reading
 
     async def _add_value_to_readings(self) -> None:
         if global_config.environment.is_development:
@@ -162,6 +162,9 @@ class RainfallService(Service):
         else:
             # This sensor does not need to read from the sensor as the when_pressed event is triggered only when water is detected
             pass
+
+    def _sync_get_reading(self) -> None:
+        asyncio.run(self.get_reading())
 
     async def get_reading(self) -> None:
         if self.getting_readings:
