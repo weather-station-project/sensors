@@ -14,12 +14,18 @@ log_info () {
 }
 
 # Variables and parameters
-folder="sensors-master"
+app_folder="app"
 version="$1"
+
+# Check if version is null
+if [ -z "$version" ]; then
+  log_error 'Version parameter is missing. Please provide a version (e.g., master or x.y.z).'
+  exit 1
+fi
 
 # Stop all the existing containers
 log_info 'Stopping all the existing containers'
-docker compose --file "./$folder/docker-compose.yml" down
+docker compose --file "./$app_folder/docker-compose.yml" down
 docker rm -f "$(docker ps -aq)" || true
 
 # Clean all the Docker stuff to save space
@@ -42,7 +48,7 @@ rm app.zip
 
 # Build the docker image
 log_info 'Building the docker image'
-docker compose --file "./$folder/docker-compose.yml" build
+docker compose --file "./$app_folder/docker-compose.yml" build
 
 # From here, just execute the docker-compose up -d to start the containers after setting up the compose file
-log_info "To start the containers, run the following command: docker compose --file "./$folder/docker-compose.yml" up -d"
+log_info "To start the containers, run the following command: docker compose --file "./$app_folder/docker-compose.yml" up -d"
