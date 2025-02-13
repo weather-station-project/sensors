@@ -66,6 +66,7 @@ async def main() -> int:
 
                 if global_config.environment.read_only:
                     logger.info(msg="Read only mode enabled. Measurements will not be added to the API")
+                else:
                     await asyncio.gather(
                         *(controller.add_measurement(measurement) for controller, measurement in zip(controllers, measurements) if measurement)
                     )
