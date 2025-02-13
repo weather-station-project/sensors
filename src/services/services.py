@@ -60,9 +60,6 @@ class Service(ABC):
         try:
             self.__getting_readings = True
 
-            if len(self.__readings) == 0:
-                raise ValueError(f"No readings from the service {self.__class__.__name__}")
-
             return await self._get_measurement_average()
         except Exception as e:
             raise GettingMeasurementException(service_name=self.__class__.__name__, e=e)
@@ -101,7 +98,7 @@ class AirMeasurementService(Service):
         temperature: float = 0
         pressure: float = 0
         humidity: float = 0
-        number_of_readings: int = len(self.readings)
+        number_of_readings: int = len(self.readings) if len(self.readings) > 0 else 1
 
         for reading in self.readings:
             temperature += reading.temperature
@@ -132,7 +129,8 @@ class GroundTemperatureService(Service):
         return Measurement(temperature=0)
 
     async def _get_measurement_average(self) -> Measurement:
-        return Measurement(temperature=int(mean([reading.temperature for reading in self.readings])), date_time=datetime.now())
+        average: int = int(mean([reading.temperature for reading in self.readings])) if len(self.readings) > 0 else 0
+        return Measurement(temperature=average, date_time=datetime.now())
 
 
 class RainfallService(Service):
@@ -195,8 +193,11 @@ class WindMeasurementService(Service):
         return Measurement(speed=0, direction="N-W")
 
     async def _get_measurement_average(self) -> Measurement:
+        average_speed: int = int(mean([reading.speed for reading in self.readings])) if len(self.readings) > 0 else 0
+        mode_wind_direction: str = mode([reading.direction for reading in self.readings]) if len(self.readings) > 0 else "-"
+
         return Measurement(
-            speed=int(mean([reading.speed for reading in self.readings])),
-            direction=mode([reading.direction for reading in self.readings]),
+            speed=average_speed,
+            direction=mode_wind_direction,
             date_time=datetime.now(),
         )

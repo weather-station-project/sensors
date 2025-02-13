@@ -16,7 +16,8 @@ RUN apk add --no-cache gcc \
                        i2c-tools \
                        linux-headers \
                        swig \
-                       py3-setuptools
+                       py3-setuptools \
+                       nano
 
 # Change workdir to the app folder
 WORKDIR /app

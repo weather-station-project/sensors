@@ -11,7 +11,6 @@ from src.controllers.controllers import (
     WindMeasurementController,
 )
 from src.exceptions.exceptions import GettingMeasurementException, AddingMeasurementException
-from src.model.models import Measurement
 
 logger = get_logger(name="main")
 
@@ -63,15 +62,13 @@ async def main() -> int:
             await asyncio.sleep(delay=seconds_waiting)
 
             try:
-                for controller in controllers:
-                    measurement: Measurement = await controller.get_measurement()
+                measurements = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
 
-                    if global_config.environment.read_only:
-                        logger.info(msg=f"Read only enabled. Skipping adding measurement {measurement.to_dict()}")
-                    else:
-                        await controller.add_measurement(measurement)
-
-                    # TODO ADD SOCKETIO EMIT HERE
+                if global_config.environment.read_only:
+                    logger.info(msg="Read only mode enabled. Measurements will not be added to the API")
+                    await asyncio.gather(
+                        *(controller.add_measurement(measurement) for controller, measurement in zip(controllers, measurements) if measurement)
+                    )
 
                 if global_config.environment.is_testing:
                     break

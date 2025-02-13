@@ -9,24 +9,27 @@ class Vane(object):
     __CHANNEL: int = 0
     __VOLTAGE_IN: float = 3.3
     __UNKNOWN_WIND_DIRECTION: str = "-"
-    __VANE_ANGLES_AND_DIRECTIONS_TABLE: dict[float, str] = {
-        0.4: "N",
-        1.4: "N-NE",
-        1.2: "N-E",
-        2.8: "E-NE",
-        2.7: "E",
-        2.9: "E-SE",
-        2.2: "S-E",
-        2.5: "S-SE",
-        1.8: "S",
-        2.0: "S-SW",
-        0.7: "S-W",
-        0.8: "W-SW",
-        0.1: "W",
-        0.3: "W-NW",
-        0.2: "N-W",
-        0.6: "N-NW",
-    }
+    __VANE_ANGLES_AND_DIRECTIONS_TABLE: list[tuple[float, str]] = sorted(
+        [
+            (0.4, "N"),
+            (1.4, "N-NE"),
+            (1.2, "N-E"),
+            (2.8, "E-NE"),
+            (2.7, "E"),
+            (2.9, "E-SE"),
+            (2.2, "S-E"),
+            (2.5, "S-SE"),
+            (1.8, "S"),
+            (2.0, "S-SW"),
+            (0.7, "S-W"),
+            (0.8, "W-SW"),
+            (0.1, "W"),
+            (0.3, "W-NW"),
+            (0.2, "N-W"),
+            (0.6, "N-NW"),
+        ],
+        key=lambda x: x[0],
+    )
 
     def __init__(self) -> None:
         self.__logger = get_logger(name=self.__class__.__name__)
@@ -41,7 +44,12 @@ class Vane(object):
         return self.__get_direction_by_gpio_value(value=gpio_value)
 
     def __get_direction_by_gpio_value(self, value: float) -> str:
-        if value in self.__VANE_ANGLES_AND_DIRECTIONS_TABLE:
-            return self.__VANE_ANGLES_AND_DIRECTIONS_TABLE[value]
+        last_direction = self.__UNKNOWN_WIND_DIRECTION
 
-        return self.__UNKNOWN_WIND_DIRECTION
+        for gpio_item_value, direction in self.__VANE_ANGLES_AND_DIRECTIONS_TABLE:
+            if value < gpio_item_value:
+                return last_direction
+
+            last_direction = direction
+
+        return last_direction
