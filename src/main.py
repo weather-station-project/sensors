@@ -39,6 +39,8 @@ def get_enabled_controllers() -> List[Controller]:
 
 
 async def main() -> int:
+    exit_code = 0
+
     try:
         logger.info(msg="Application started")
 
@@ -79,13 +81,12 @@ async def main() -> int:
                 logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
             except Exception as e:
                 logger.exception("Unexpected error getting or adding a measurement", exc_info=e)
-
-        return 0
     except Exception as e:
         logger.critical(e, exc_info=True)
-        return 1
+        exit_code = 1
     finally:
         logger.info(msg="Application finished")
+        return exit_code
 
 
 if __name__ == "__main__":
