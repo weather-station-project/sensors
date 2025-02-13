@@ -1,12 +1,12 @@
 from http import HTTPStatus
 
 import aiohttp
+from tenacity import retry, stop_after_attempt, wait_random
 
 from src.colored_logging.colored_logging import get_logger
 from src.exceptions.exceptions import AddingMeasurementException
 from src.helpers.helpers import SingletonMeta
 from src.model.models import Measurement
-from tenacity import retry, stop_after_attempt, wait_random
 
 
 class MeasurementApiClient(metaclass=SingletonMeta):
@@ -30,6 +30,9 @@ class MeasurementApiClient(metaclass=SingletonMeta):
             async with session.post(
                 url=self.__auth_url, json={"login": self.__user, "password": self.__password}, headers={"Content-Type": "application/json"}
             ) as response:
+                if response.status == HTTPStatus.UNAUTHORIZED:
+                    raise AddingMeasurementException(response_message="Invalid credentials", response_status=HTTPStatus.UNAUTHORIZED, e=None)
+
                 response.raise_for_status()
                 data = await response.json()
                 self.__token = data.get("access_token")
@@ -45,8 +48,8 @@ class MeasurementApiClient(metaclass=SingletonMeta):
         response_message: str | None = None
         response_status: int | None = None
 
+        token = await self.__get_token()
         try:
-            token = await self.__get_token()
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
             async with aiohttp.ClientSession() as session:

@@ -14,7 +14,7 @@ class GettingMeasurementException(Exception):
 class AddingMeasurementException(Exception):
     __slots__ = ["__response_message", "__response_status"]
 
-    def __init__(self, response_message: str, response_status: int, e: Exception) -> None:
+    def __init__(self, response_message: str, response_status: int, e: Exception | None) -> None:
         super().__init__(e)
 
         self.__response_message = response_message
