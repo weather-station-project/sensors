@@ -12,14 +12,10 @@ services:
       - READ_ONLY=false
       - LOG_LEVEL=debug
       - USER=sensors
-      - PASSWORD=/run/secrets/password
+      - PASSWORD=<changeme>
       - ROOT_URL=http://192.168.1.1:8080
-      - BME280_SENSOR_ENABLED=false
-      - GROUND_TEMPERATURE_SENSOR_ENABLED=false
-      - RAIN_GAUGE_ENABLED=false
-      - ANEMOMETER_ENABLED=false
+      - BME280_SENSOR_ENABLED=true
+      - GROUND_TEMPERATURE_SENSOR_ENABLED=true
+      - RAIN_GAUGE_ENABLED=true
+      - ANEMOMETER_ENABLED=true
       - TZ=Europe/Madrid
-
-secrets:
-   password:
-     file: password.txt
