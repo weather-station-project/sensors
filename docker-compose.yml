@@ -8,6 +8,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      - MINUTES_BETWEEN_READINGS=5
       - ENVIRONMENT=production
       - READ_ONLY=false
       - LOG_LEVEL=debug
