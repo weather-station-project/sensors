@@ -30,9 +30,6 @@ class MeasurementApiClient(metaclass=SingletonMeta):
             async with session.post(
                 url=self.__auth_url, json={"login": self.__user, "password": self.__password}, headers={"Content-Type": "application/json"}
             ) as response:
-                if response.status == HTTPStatus.UNAUTHORIZED:
-                    raise AddingMeasurementException(response_message="Invalid credentials", response_status=HTTPStatus.UNAUTHORIZED, e=None)
-
                 response.raise_for_status()
                 data = await response.json()
                 self.__token = data.get("access_token")
@@ -45,11 +42,8 @@ class MeasurementApiClient(metaclass=SingletonMeta):
 
     @retry(reraise=True, stop=(stop_after_attempt(__NUMBER_OF_ATTEMPTS)), wait=wait_random(min=__WAITING_TIME_MIN, max=__WAITING_TIME_MAX))
     async def add_measurement(self, end_point: str, measurement: Measurement) -> None:
-        response_message: str | None = None
-        response_status: int | None = None
-
-        token = await self.__get_token()
         try:
+            token = await self.__get_token()
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
             async with aiohttp.ClientSession() as session:
@@ -58,11 +52,6 @@ class MeasurementApiClient(metaclass=SingletonMeta):
                         self.__logger.debug("Token expired, renewing token")
                         await self.__set_token()
 
-                    response_message = await response.text()
-                    response_status = response.status
                     response.raise_for_status()
-        except Exception as e:
-            if response_message is not None and response_status is not None:
-                raise AddingMeasurementException(response_message=response_message, response_status=response_status, e=e)
-
-            raise AddingMeasurementException(response_message="Unknown response from the API", response_status=0, e=e)
+        except aiohttp.ClientResponseError as e:
+            raise AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
