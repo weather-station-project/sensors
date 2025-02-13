@@ -58,7 +58,7 @@ async def main() -> int:
             else:
                 seconds_waiting: int = 20
 
-            logger.debug(msg=f"Sleeping {seconds_waiting} seconds while sensors are getting readings")
+            logger.info(msg=f"Sleeping {seconds_waiting} seconds while sensors are getting readings")
             await asyncio.sleep(delay=seconds_waiting)
 
             try:
