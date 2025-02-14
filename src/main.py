@@ -11,6 +11,7 @@ from src.controllers.controllers import (
     WindMeasurementController,
 )
 from src.exceptions.exceptions import GettingMeasurementException, AddingMeasurementException
+from src.model.models import Measurement
 
 logger = get_logger(name="main")
 
@@ -62,7 +63,9 @@ async def main() -> int:
             await asyncio.sleep(delay=seconds_waiting)
 
             try:
-                measurements = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
+                measurements: List[Measurement] = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
+
+                # TODO ADD EMIT SOCKET SERVER
 
                 if global_config.environment.read_only:
                     logger.info(msg="Read only mode enabled. Measurements will not be added to the API")
@@ -78,7 +81,7 @@ async def main() -> int:
             except AddingMeasurementException as e:
                 logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
             except Exception as e:
-                logger.exception("Unexpected error getting or adding a measurement", exc_info=e)
+                logger.exception(msg="Unexpected error getting or adding a measurement", exc_info=e)
     except Exception as e:
         logger.critical(e, exc_info=True)
         exit_code = 1
