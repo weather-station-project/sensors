@@ -36,6 +36,7 @@ class MeasurementApiClient(metaclass=SingletonMeta):
 
     async def __get_token(self) -> str:
         if not self.__token:
+            self.__logger.debug("Token not set, setting token")
             await self.__set_token()
 
         return self.__token
