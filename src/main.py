@@ -1,6 +1,7 @@
 import asyncio
 from typing import List
 
+from src.clients.clients import ApiClient
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.controllers.controllers import (
@@ -40,6 +41,7 @@ def get_enabled_controllers() -> List[Controller]:
 
 async def main() -> int:
     exit_code = 0
+    api_client = ApiClient(auth_url=global_config.api.auth_url, user=global_config.api.user, password=global_config.api.password)
 
     try:
         logger.info(msg="Application started")
@@ -65,14 +67,13 @@ async def main() -> int:
             try:
                 measurements: List[Measurement] = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
 
-                # TODO ADD EMIT SOCKET SERVER
-
                 if global_config.environment.read_only:
                     logger.info(msg="Read only mode enabled. Measurements will not be added to the API")
                 else:
-                    await asyncio.gather(
-                        *(controller.add_measurement(measurement) for controller, measurement in zip(controllers, measurements) if measurement)
-                    )
+                    tuples_endpoint_measurement: List[tuple[str, Measurement]] = [
+                        (controller.api_endpoint, measurement) for controller, measurement in zip(controllers, measurements)
+                    ]
+                    await api_client.add_measurements(tuples_endpoint_measurement=tuples_endpoint_measurement)
 
                 if global_config.environment.is_testing:
                     break
