@@ -27,3 +27,16 @@ class AddingMeasurementException(Exception):
     @property
     def response_status(self) -> int:
         return self.__response_status
+
+
+class EmittingMeasurementException(Exception):
+    __slots__ = ["__message"]
+
+    def __init__(self, message: str, e: Exception | None) -> None:
+        super().__init__(e)
+
+        self.__message = message
+
+    @property
+    def message(self) -> str:
+        return self.__message

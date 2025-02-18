@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import List
 
 import aiohttp
+import socketio
 from tenacity import retry, stop_after_attempt, wait_random
 
 from src.colored_logging.colored_logging import get_logger
@@ -47,7 +48,7 @@ class Client(ABC):
 class ApiClient(Client):
     async def add_measurements(self, tuples_endpoint_measurement: List[tuple[str, Measurement]]) -> None:
         try:
-            token = await self._get_token()
+            token: str = await self._get_token()
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
             async with aiohttp.ClientSession() as session:
@@ -57,7 +58,7 @@ class ApiClient(Client):
             raise AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    async def __process_request(self, session: aiohttp.ClientSession, end_point: str, headers: dict, measurement: Measurement):
+    async def __process_request(self, session: aiohttp.ClientSession, end_point: str, headers: dict, measurement: Measurement) -> None:
         async with session.post(url=end_point, json=measurement.to_dict(), headers=headers) as response:
             if response.status == HTTPStatus.UNAUTHORIZED:
                 self._logger.debug("Token expired, renewing token")
@@ -65,3 +66,33 @@ class ApiClient(Client):
 
             response.raise_for_status()
             self._logger.info(msg=f"Measurement added through the endpoint {end_point} correctly")
+
+
+class SocketClient(Client):
+    __slots__ = ["__socket_url"]
+
+    def __init__(self, socket_url: str, auth_url: str, user: str, password: str):
+        super().__init__(auth_url=auth_url, user=user, password=password)
+
+        self.__socket_url = socket_url
+
+    async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
+        client: socketio.AsyncClient | None = None
+
+        try:
+            token: str = await self._get_token()
+            client = socketio.AsyncClient()
+            await client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"])
+
+            for event, measurement in tuples_event_measurement:
+                await self.__process_emit(socket=client, event=event, measurement=measurement)
+        except Exception:
+            raise  # AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
+        finally:
+            if client is not None:
+                await client.disconnect()
+
+    @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
+    async def __process_emit(self, socket: socketio.AsyncClient, event: str, measurement: Measurement) -> None:
+        await socket.emit(event=event, data=measurement)
+        self._logger.info(msg=f"Measurement passed through the event {event} correctly")

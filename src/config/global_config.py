@@ -106,6 +106,45 @@ class ApiConfig:
         return self.__add_rainfall_measurement_endpoint
 
 
+class SocketConfig:
+    __slots__ = [
+        "__socket_url",
+        "__emit_air_measurement_event",
+        "__emit_ground_temperature_event",
+        "__emit_wind_measurement_event",
+        "__emit_rainfall_event",
+        "__exception_event",
+    ]
+
+    def __init__(self):
+        self.__socket_url = os.environ.get("SOCKET_URL", "http://localhost:8081")
+        self.__emit_air_measurement_event = "emitAirMeasurement"
+        self.__emit_ground_temperature_event = "emitGroundTemperature"
+        self.__emit_wind_measurement_event = "emitWindMeasurement"
+        self.__emit_rainfall_event = "emitRainfall"
+        self.__exception_event = "exception"
+
+    @property
+    def socket_url(self) -> str:
+        return self.__socket_url
+
+    @property
+    def emit_air_measurement_event(self) -> str:
+        return self.__emit_air_measurement_event
+
+    @property
+    def emit_ground_temperature_event(self) -> str:
+        return self.__emit_ground_temperature_event
+
+    @property
+    def emit_wind_measurement_event(self) -> str:
+        return self.__emit_wind_measurement_event
+
+    @property
+    def emit_rainfall_event(self) -> str:
+        return self.__emit_rainfall_event
+
+
 class DeviceConfig:
     __slots__ = [
         "__minutes_between_readings",
@@ -169,13 +208,14 @@ class DeviceConfig:
 
 @final
 class GlobalConfig:
-    __slots__ = ["__environment", "__log", "__api", "__device"]
+    __slots__ = ["__environment", "__log", "__api", "__socket", "__device"]
 
     def __init__(self) -> None:
-        self.__environment: Environment = Environment()
-        self.__log: LoggingConfig = LoggingConfig()
-        self.__api: ApiConfig = ApiConfig()
-        self.__device: DeviceConfig = DeviceConfig()
+        self.__environment = Environment()
+        self.__log = LoggingConfig()
+        self.__api = ApiConfig()
+        self.__socket = SocketConfig()
+        self.__device = DeviceConfig()
 
     @property
     def environment(self) -> Environment:
@@ -188,6 +228,10 @@ class GlobalConfig:
     @property
     def api(self) -> ApiConfig:
         return self.__api
+
+    @property
+    def socket(self) -> SocketConfig:
+        return self.__socket
 
     @property
     def device(self) -> DeviceConfig:

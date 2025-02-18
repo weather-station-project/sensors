@@ -7,11 +7,12 @@ from src.services.services import Service, AirMeasurementService, GroundTemperat
 
 
 class Controller(ABC):
-    __slots__ = ["__service", "__api_endpoint", "__logger"]
+    __slots__ = ["__service", "__api_endpoint", "__socket_event", "__logger"]
 
-    def __init__(self, service: Service, api_endpoint: str) -> None:
+    def __init__(self, service: Service, api_endpoint: str, socket_event: str) -> None:
         self.__service = service
         self.__api_endpoint = api_endpoint
+        self.__socket_event = socket_event
         self.__logger = get_logger(name=self.__class__.__name__)
 
         self.__logger.debug(msg=f"Controller initialized with the service {self.__service.__class__.__name__} and API endpoint {self.__api_endpoint}")
@@ -19,6 +20,10 @@ class Controller(ABC):
     @property
     def api_endpoint(self) -> str:
         return self.__api_endpoint
+
+    @property
+    def socket_event(self) -> str:
+        return self.__socket_event
 
     async def get_measurement(self) -> Measurement:
         measurement: Measurement = await self.__service.get_measurement()
@@ -29,17 +34,29 @@ class Controller(ABC):
 
 class AirMeasurementsController(Controller):
     def __init__(self) -> None:
-        super().__init__(service=AirMeasurementService(), api_endpoint=global_config.api.add_air_measurement_endpoint)
+        super().__init__(
+            service=AirMeasurementService(),
+            api_endpoint=global_config.api.add_air_measurement_endpoint,
+            socket_event=global_config.socket.emit_air_measurement_event,
+        )
 
 
 class GroundTemperatureController(Controller):
     def __init__(self) -> None:
-        super().__init__(service=GroundTemperatureService(), api_endpoint=global_config.api.add_ground_temperature_endpoint)
+        super().__init__(
+            service=GroundTemperatureService(),
+            api_endpoint=global_config.api.add_ground_temperature_endpoint,
+            socket_event=global_config.socket.emit_ground_temperature_event,
+        )
 
 
 class RainfallController(Controller):
     def __init__(self) -> None:
-        super().__init__(service=RainfallService(), api_endpoint=global_config.api.add_rainfall_measurement_endpoint)
+        super().__init__(
+            service=RainfallService(),
+            api_endpoint=global_config.api.add_rainfall_measurement_endpoint,
+            socket_event=global_config.socket.emit_rainfall_event,
+        )
 
 
 class WindMeasurementController(Controller):
@@ -47,4 +64,5 @@ class WindMeasurementController(Controller):
         super().__init__(
             service=WindMeasurementService(anemometer_port=global_config.device.anemometer_port),
             api_endpoint=global_config.api.add_wind_measurement_endpoint,
+            socket_event=global_config.socket.emit_wind_measurement_event,
         )

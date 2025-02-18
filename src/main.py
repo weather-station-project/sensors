@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 
-from src.clients.clients import ApiClient
+from src.clients.clients import ApiClient, SocketClient
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.controllers.controllers import (
@@ -11,7 +11,7 @@ from src.controllers.controllers import (
     RainfallController,
     WindMeasurementController,
 )
-from src.exceptions.exceptions import GettingMeasurementException, AddingMeasurementException
+from src.exceptions.exceptions import GettingMeasurementException, AddingMeasurementException, EmittingMeasurementException
 from src.model.models import Measurement
 
 logger = get_logger(name="main")
@@ -42,6 +42,12 @@ def get_enabled_controllers() -> List[Controller]:
 async def main() -> int:
     exit_code = 0
     api_client = ApiClient(auth_url=global_config.api.auth_url, user=global_config.api.user, password=global_config.api.password)
+    socket_client = SocketClient(
+        socket_url=global_config.socket.socket_url,
+        auth_url=global_config.api.auth_url,
+        user=global_config.api.user,
+        password=global_config.api.password,
+    )
 
     try:
         logger.info(msg="Application started")
@@ -68,12 +74,18 @@ async def main() -> int:
                 measurements: List[Measurement] = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
 
                 if global_config.environment.read_only:
-                    logger.info(msg="Read only mode enabled. Measurements will not be added to the API")
+                    logger.info(msg="Read only mode enabled. Measurements will not be added nor emitted")
                 else:
                     tuples_endpoint_measurement: List[tuple[str, Measurement]] = [
                         (controller.api_endpoint, measurement) for controller, measurement in zip(controllers, measurements)
                     ]
-                    await api_client.add_measurements(tuples_endpoint_measurement=tuples_endpoint_measurement)
+                    tuples_event_measurement: List[tuple[str, Measurement]] = [
+                        (controller.socket_event, measurement) for controller, measurement in zip(controllers, measurements)
+                    ]
+                    await asyncio.gather(
+                        api_client.add_measurements(tuples_endpoint_measurement=tuples_endpoint_measurement),
+                        socket_client.emit_measurements(tuples_event_measurement=tuples_event_measurement),
+                    )
 
                 if global_config.environment.is_testing:
                     break
@@ -81,6 +93,8 @@ async def main() -> int:
                 logger.error(msg=f"Error getting a measurement from the service {e.service_name}", exc_info=e)
             except AddingMeasurementException as e:
                 logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
+            except EmittingMeasurementException as e:
+                logger.error(msg=f"Error emitting a measurement with the message {e.message}", exc_info=e)
             except Exception as e:
                 logger.exception(msg="Unexpected error getting or adding a measurement", exc_info=e)
     except Exception as e:
