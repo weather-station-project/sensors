@@ -76,7 +76,7 @@ class SocketClient(Client):
         super().__init__(auth_url=auth_url, user=user, password=password)
 
         self.__socket_url = socket_url
-        self.__client = socketio.Client()
+        self.__client = socketio.SimpleClient()
 
     async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
         try:
