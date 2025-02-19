@@ -1,3 +1,4 @@
+import json
 from abc import ABC
 from http import HTTPStatus
 from typing import List
@@ -26,7 +27,7 @@ class Client(ABC):
         self.__password = password
         self.__token = ""
 
-        self._logger.debug(msg=f"MeasurementApiClient initialized with user {self.__user} and url {self.__auth_url}")
+        self._logger.debug(msg=f"{self.__class__.__name__} initialized with user {self.__user} and url {self.__auth_url}")
 
     async def _set_token(self) -> None:
         async with aiohttp.ClientSession() as session:
@@ -69,30 +70,28 @@ class ApiClient(Client):
 
 
 class SocketClient(Client):
-    __slots__ = ["__socket_url"]
+    __slots__ = ["__socket_url", "__client"]
 
-    def __init__(self, socket_url: str, auth_url: str, user: str, password: str):
+    def __init__(self, socket_url: str, auth_url: str, user: str, password: str) -> None:
         super().__init__(auth_url=auth_url, user=user, password=password)
 
         self.__socket_url = socket_url
+        self.__client = socketio.Client()
 
     async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
-        client: socketio.AsyncClient | None = None
-
         try:
             token: str = await self._get_token()
-            client = socketio.AsyncClient()
-            await client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"])
+            self.__client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"])
 
             for event, measurement in tuples_event_measurement:
-                await self.__process_emit(socket=client, event=event, measurement=measurement)
+                self.__process_emit(event=event, measurement=measurement)
         except Exception:
             raise  # AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
         finally:
-            if client is not None:
-                await client.disconnect()
+            if self.__client.connected:
+                self.__client.disconnect()
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    async def __process_emit(self, socket: socketio.AsyncClient, event: str, measurement: Measurement) -> None:
-        await socket.emit(event=event, data=measurement)
+    def __process_emit(self, event: str, measurement: Measurement) -> None:
+        self.__client.emit(event=event, data=json.dumps(obj=measurement.to_dict()))
         self._logger.info(msg=f"Measurement passed through the event {event} correctly")

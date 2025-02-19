@@ -11,7 +11,7 @@ rpi-bme280 = "~=0.0"
 gpiozero = "~=2.0"
 aiohttp = "~=3.0"
 tenacity = "~=9.0"
-python-socketio = {extras = ["asyncio_client"], version = "*"}
+python-socketio = {extras = ["client"], version = "~=5.0"}
 
 [dev-packages]
 black = "~=24.0"

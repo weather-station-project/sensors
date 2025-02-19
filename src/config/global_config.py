@@ -43,7 +43,7 @@ class Environment:
 class LoggingConfig:
     __slots__ = ["__level"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__level = os.environ.get("LOG_LEVEL", "DEBUG")
 
     @property
@@ -63,7 +63,7 @@ class ApiConfig:
         "__add_rainfall_measurement_endpoint",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__user = os.environ.get("USER", "sensors")
         self.__password = os.environ.get("PASSWORD", "123456")
         self.__root_url = os.environ.get("ROOT_URL", "http://localhost:8080")
@@ -116,7 +116,7 @@ class SocketConfig:
         "__exception_event",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__socket_url = os.environ.get("SOCKET_URL", "http://localhost:8081")
         self.__emit_air_measurement_event = "emitAirMeasurement"
         self.__emit_ground_temperature_event = "emitGroundTemperature"
@@ -158,7 +158,7 @@ class DeviceConfig:
         "__rain_gauge_port",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__minutes_between_readings = int(os.environ.get("MINUTES_BETWEEN_READINGS", 5))
         self.__bme280_sensor_enabled = get_bool_from_string(os.environ.get("BME280_SENSOR_ENABLED", "False"))
         self.__ground_temperature_sensor_enabled = get_bool_from_string(os.environ.get("GROUND_TEMPERATURE_SENSOR_ENABLED", "False"))
