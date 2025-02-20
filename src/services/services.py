@@ -12,7 +12,6 @@ from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.exceptions.exceptions import GettingMeasurementException
 from src.model.models import Measurement
 from src.sensors.anemometer import Anemometer
 from src.sensors.vane import Vane
@@ -62,7 +61,7 @@ class Service(ABC):
 
             return await self._get_measurement_average()
         except Exception as e:
-            raise GettingMeasurementException(service_name=self.__class__.__name__, e=e)
+            self._logger.error(msg="Error getting a measurement", exc_info=e)
         finally:
             self.__readings.clear()
             self.__getting_readings = False

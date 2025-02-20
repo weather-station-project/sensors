@@ -5,10 +5,10 @@ from typing import List
 
 import aiohttp
 import socketio
+from socketio import exceptions
 from tenacity import retry, stop_after_attempt, wait_random
 
 from src.colored_logging.colored_logging import get_logger
-from src.exceptions.exceptions import AddingMeasurementException
 from src.model.models import Measurement
 
 NUMBER_OF_ATTEMPTS: int = 3
@@ -45,6 +45,9 @@ class Client(ABC):
 
         return self.__token
 
+    def _reset_token(self) -> None:
+        self.__token = None
+
 
 class ApiClient(Client):
     async def add_measurements(self, tuples_endpoint_measurement: List[tuple[str, Measurement]]) -> None:
@@ -56,7 +59,7 @@ class ApiClient(Client):
                 for end_point, measurement in tuples_endpoint_measurement:
                     await self.__process_request(session=session, end_point=end_point, headers=headers, measurement=measurement)
         except aiohttp.ClientResponseError as e:
-            raise AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
+            self._logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
     async def __process_request(self, session: aiohttp.ClientSession, end_point: str, headers: dict, measurement: Measurement) -> None:
@@ -76,22 +79,40 @@ class SocketClient(Client):
         super().__init__(auth_url=auth_url, user=user, password=password)
 
         self.__socket_url = socket_url
-        self.__client = socketio.SimpleClient()
+        self.__client = socketio.Client()
 
+    @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
     async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
+        @self.__client.on(event="connect")
+        def connection_handler() -> None:
+            self._logger.debug(msg=f"Socket connected to the server {self.__socket_url}")
+
+        @self.__client.on(event="disconnect")
+        def disconnect_handler(reason) -> None:
+            self._logger.debug(msg=f"Socket disconnected with reason '{reason}'")
+
+        @self.__client.on(event="exception")
+        def exception_handler(msg: str) -> None:
+            if "ws_error" in msg:
+                self._logger.debug("Token expired, renewing token")
+                self._reset_token()
+
+            self._logger.error(msg=f"Exception received from the server with message {msg}")
+
         try:
             token: str = await self._get_token()
             self.__client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"])
 
+            if not self.__client.connected:
+                raise exceptions.ConnectionError()
+
             for event, measurement in tuples_event_measurement:
-                self.__process_emit(event=event, measurement=measurement)
-        except Exception:
-            raise  # AddingMeasurementException(response_message=e.message, response_status=e.status, e=e)
+                self.__client.emit(event=event, data=json.dumps(obj=measurement.to_dict()))
+                self._logger.info(msg=f"Measurement passed through the event {event} correctly")
+        except socketio.exceptions.ConnectionError as e:
+            self._logger.error(msg=f"Socket not connected to the server {self.__socket_url}", exc_info=e)
+        except Exception as e:
+            self._logger.error(msg=f"Unexpected socket error {e}", exc_info=e)
         finally:
             if self.__client.connected:
                 self.__client.disconnect()
-
-    @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    def __process_emit(self, event: str, measurement: Measurement) -> None:
-        self.__client.emit(event=event, data=json.dumps(obj=measurement.to_dict()))
-        self._logger.info(msg=f"Measurement passed through the event {event} correctly")
