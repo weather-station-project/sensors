@@ -15,7 +15,10 @@ class Controller(ABC):
         self.__socket_event = socket_event
         self.__logger = get_logger(name=self.__class__.__name__)
 
-        self.__logger.debug(msg=f"Controller initialized with the service {self.__service.__class__.__name__} and API endpoint {self.__api_endpoint}")
+        self.__logger.debug(
+            msg=f"Controller initialized with the service {self.__service.__class__.__name__}"
+            f" API endpoint {self.__api_endpoint} and socket event {self.__socket_event}"
+        )
 
     @property
     def api_endpoint(self) -> str:

@@ -52,21 +52,22 @@ class Client(ABC):
 class ApiClient(Client):
     async def add_measurements(self, tuples_endpoint_measurement: List[tuple[str, Measurement]]) -> None:
         try:
-            token: str = await self._get_token()
-            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
-
             async with aiohttp.ClientSession() as session:
                 for end_point, measurement in tuples_endpoint_measurement:
-                    await self.__process_request(session=session, end_point=end_point, headers=headers, measurement=measurement)
+                    await self.__process_request(session=session, end_point=end_point, measurement=measurement)
         except aiohttp.ClientResponseError as e:
-            self._logger.error(msg=f"Error adding a measurement with the response ({e.response_status}) {e.response_message}", exc_info=e)
+            self._logger.error(msg=f"Error adding a measurement with the response ({e.status}) {e.message}", exc_info=e)
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    async def __process_request(self, session: aiohttp.ClientSession, end_point: str, headers: dict, measurement: Measurement) -> None:
-        async with session.post(url=end_point, json=measurement.to_dict(), headers=headers) as response:
+    async def __process_request(self, session: aiohttp.ClientSession, end_point: str, measurement: Measurement) -> None:
+        token: str = await self._get_token()
+
+        async with session.post(
+            url=end_point, json=measurement.to_dict(), headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        ) as response:
             if response.status == HTTPStatus.UNAUTHORIZED:
-                self._logger.debug("Token expired, renewing token")
-                await self._set_token()
+                self._logger.debug("Token expired, resetting token")
+                self._reset_token()
 
             response.raise_for_status()
             self._logger.info(msg=f"Measurement added through the endpoint {end_point} correctly")
@@ -93,11 +94,11 @@ class SocketClient(Client):
 
         @self.__client.on(event="exception")
         def exception_handler(msg: str) -> None:
-            if "ws_error" in msg:
-                self._logger.debug("Token expired, renewing token")
+            if "Invalid token" in msg:
+                self._logger.debug("Token expired, resetting token")
                 self._reset_token()
-
-            self._logger.error(msg=f"Exception received from the server with message {msg}")
+            else:
+                self._logger.error(msg=f"Exception received from the server with message {msg}")
 
         try:
             token: str = await self._get_token()
@@ -111,8 +112,10 @@ class SocketClient(Client):
                 self._logger.info(msg=f"Measurement passed through the event {event} correctly")
         except socketio.exceptions.ConnectionError as e:
             self._logger.error(msg=f"Socket not connected to the server {self.__socket_url}", exc_info=e)
+            raise
         except Exception as e:
             self._logger.error(msg=f"Unexpected socket error {e}", exc_info=e)
+            raise
         finally:
             if self.__client.connected:
                 self.__client.disconnect()
