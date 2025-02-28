@@ -64,7 +64,7 @@ async def main() -> int:
             elif global_config.environment.is_testing:
                 seconds_waiting: int = 1
             else:
-                seconds_waiting: int = 10
+                seconds_waiting: int = 20
 
             logger.info(msg=f"Sleeping {seconds_waiting} seconds while sensors are getting readings")
             await asyncio.sleep(delay=seconds_waiting)
