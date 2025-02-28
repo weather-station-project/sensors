@@ -1,4 +1,3 @@
-import asyncio
 import json
 from abc import ABC
 from http import HTTPStatus
@@ -75,7 +74,6 @@ class ApiClient(Client):
 
 
 class SocketClient(Client):
-    __DELAY_BETWEEN_MEASUREMENTS: int = 1
     __slots__ = ["__socket_url", "__client"]
 
     def __init__(self, socket_url: str, auth_url: str, user: str, password: str) -> None:
@@ -110,12 +108,8 @@ class SocketClient(Client):
                 raise exceptions.ConnectionError()
 
             for event, measurement in tuples_event_measurement:
-                self.__client.emit(
-                    event=event,
-                    data=json.dumps(obj=measurement.to_dict()),
-                    callback=self._logger.info(msg=f"Measurement passed through the event {event} correctly"),
-                )
-                await asyncio.sleep(delay=self.__DELAY_BETWEEN_MEASUREMENTS)
+                self.__client.call(event=event, data=json.dumps(obj=measurement.to_dict()))
+                self._logger.info(msg=f"Measurement passed through the event {event} correctly")
         except socketio.exceptions.ConnectionError as e:
             self._logger.error(msg=f"Socket not connected to the server {self.__socket_url}", exc_info=e)
             raise
