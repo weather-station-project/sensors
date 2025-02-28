@@ -173,7 +173,7 @@ class RainfallService(Service):
         self._logger.debug(msg=f"Obtained reading: {reading.to_dict()}")
 
     async def _get_measurement_average(self) -> Measurement:
-        return Measurement(amount=int(len(self.readings) * self.__BUCKET_SIZE_IN_MM), date_time=datetime.now())
+        return Measurement(amount=int(round(number=len(self.readings) * self.__BUCKET_SIZE_IN_MM)), date_time=datetime.now())
 
 
 class WindMeasurementService(Service):
