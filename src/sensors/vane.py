@@ -1,6 +1,7 @@
 from gpiozero import MCP3008
 
 from src.colored_logging.colored_logging import get_logger
+from src.model.models import WindDirection
 
 
 class Vane(object):
@@ -11,22 +12,22 @@ class Vane(object):
     __UNKNOWN_WIND_DIRECTION: str = "-"
     __VANE_ANGLES_AND_DIRECTIONS_TABLE: list[tuple[float, str]] = sorted(
         [
-            (0.4, "N"),
-            (1.4, "N-NE"),
-            (1.2, "N-E"),
-            (2.8, "E-NE"),
-            (2.7, "E"),
-            (2.9, "E-SE"),
-            (2.2, "S-E"),
-            (2.5, "S-SE"),
-            (1.8, "S"),
-            (2.0, "S-SW"),
-            (0.7, "S-W"),
-            (0.8, "W-SW"),
-            (0.1, "W"),
-            (0.3, "W-NW"),
-            (0.2, "N-W"),
-            (0.6, "N-NW"),
+            (0.4, WindDirection.N),
+            (1.4, WindDirection.N_NE),
+            (1.2, WindDirection.N_E),
+            (2.8, WindDirection.E_NE),
+            (2.7, WindDirection.E),
+            (2.9, WindDirection.E_SE),
+            (2.2, WindDirection.S_E),
+            (2.5, WindDirection.S_SE),
+            (1.8, WindDirection.S),
+            (2.0, WindDirection.S_SW),
+            (0.7, WindDirection.S_W),
+            (0.8, WindDirection.W_SW),
+            (0.1, WindDirection.W),
+            (0.3, WindDirection.W_NW),
+            (0.2, WindDirection.N_W),
+            (0.6, WindDirection.N_NW),
         ],
         key=lambda x: x[0],
     )

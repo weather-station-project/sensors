@@ -5,6 +5,7 @@ from statistics import mode, mean
 from typing import List
 
 import bme280
+import random
 import smbus2
 from bme280 import compensated_readings
 from gpiozero import Button
@@ -12,7 +13,7 @@ from w1thermsensor import AsyncW1ThermSensor, Unit
 
 from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
-from src.model.models import Measurement
+from src.model.models import Measurement, WindDirection
 from src.sensors.anemometer import Anemometer
 from src.sensors.vane import Vane
 
@@ -91,7 +92,7 @@ class AirMeasurementService(Service):
             data: compensated_readings = bme280.sample(bus=self.__bus, address=self.__address, compensation_params=self.__calibration_params)
             return Measurement(temperature=data.temperature, pressure=data.pressure, humidity=data.humidity)
 
-        return Measurement(temperature=0, pressure=0, humidity=0)
+        return Measurement(temperature=random.randint(a=-10, b=40), pressure=random.randint(a=950, b=1050), humidity=random.randint(a=10, b=90))
 
     async def _get_measurement_average(self) -> Measurement:
         temperature: float = 0
@@ -125,7 +126,7 @@ class GroundTemperatureService(Service):
         if global_config.environment.is_production:
             return Measurement(temperature=int(await self.__sensor.get_temperature(unit=Unit.DEGREES_C)))
 
-        return Measurement(temperature=0)
+        return Measurement(temperature=random.randint(a=-10, b=40))
 
     async def _get_measurement_average(self) -> Measurement:
         average: int = int(mean([reading.temperature for reading in self.readings])) if len(self.readings) > 0 else 0
@@ -189,7 +190,7 @@ class WindMeasurementService(Service):
         if global_config.environment.is_production:
             return Measurement(speed=int(self.__anemometer.get_speed()), direction=self.__vane.get_direction())
 
-        return Measurement(speed=0, direction="N-W")
+        return Measurement(speed=random.randint(a=10, b=100), direction=random.choice(seq=list(WindDirection)).value)
 
     async def _get_measurement_average(self) -> Measurement:
         average_speed: int = int(mean([reading.speed for reading in self.readings])) if len(self.readings) > 0 else 0
