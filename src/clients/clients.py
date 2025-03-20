@@ -80,7 +80,7 @@ class SocketClient(Client):
         super().__init__(auth_url=auth_url, user=user, password=password)
 
         self.__socket_url = socket_url
-        self.__client = socketio.Client()
+        self.__client = socketio.Client(ssl_verify=False)
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
     async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
