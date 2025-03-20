@@ -30,7 +30,7 @@ class Client(ABC):
         self._logger.debug(msg=f"{self.__class__.__name__} initialized with user {self.__user} and url {self.__auth_url}")
 
     async def _set_token(self) -> None:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
             async with session.post(
                 url=self.__auth_url, json={"login": self.__user, "password": self.__password}, headers={"Content-Type": "application/json"}
             ) as response:
@@ -52,7 +52,7 @@ class Client(ABC):
 class ApiClient(Client):
     async def add_measurements(self, tuples_endpoint_measurement: List[tuple[str, Measurement]]) -> None:
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
                 for end_point, measurement in tuples_endpoint_measurement:
                     await self.__process_request(session=session, end_point=end_point, measurement=measurement)
         except aiohttp.ClientResponseError as e:
