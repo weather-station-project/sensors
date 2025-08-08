@@ -7,13 +7,17 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor, ConsoleLogExporter
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.export import MetricExporter
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION, DEPLOYMENT_ENVIRONMENT
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
+from src.config.global_config import global_config
+
 
 # Useful links
 #  https://opentelemetry.io/docs/languages/python/
@@ -21,26 +25,37 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 #  https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation#readme
 
 
-# 1
-provider = TracerProvider()
-processor = BatchSpanProcessor(ConsoleSpanExporter())
-provider.add_span_processor(processor)
+def get_processor() -> BatchSpanProcessor:
+    if global_config.otel.debug_in_console:
+        return BatchSpanProcessor(ConsoleSpanExporter())
 
-trace.set_tracer_provider(provider)
+    return BatchSpanProcessor(span_exporter=OTLPSpanExporter(endpoint=f"{global_config.otel.root_url}/v1/traces"))
 
-tracer = trace.get_tracer("my.tracer.name")
 
-# 2
-metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-provider = MeterProvider(metric_readers=[metric_reader])
+def get_metric_exporter() -> MetricExporter:
+    if global_config.otel.debug_in_console:
+        return ConsoleMetricExporter()
 
-# Sets the global default meter provider
-metrics.set_meter_provider(provider)
+    return OTLPMetricExporter(endpoint=f"{global_config.otel.root_url}/v1/metrics")
 
-# Creates a meter from the global meter provider
-meter = metrics.get_meter("my.meter.name")
 
-# 3
+resources: Resource = Resource.create(
+    attributes={
+        SERVICE_NAME: global_config.otel.attrs[SERVICE_NAME],
+        SERVICE_VERSION: global_config.otel.attrs[SERVICE_VERSION],
+        DEPLOYMENT_ENVIRONMENT: global_config.otel.attrs[DEPLOYMENT_ENVIRONMENT],
+    }
+)
+
+tracer_provider = TracerProvider(resource=resources)
+tracer_provider.add_span_processor(span_processor=get_processor())
+trace.set_tracer_provider(tracer_provider)
+
+metric_reader = PeriodicExportingMetricReader(exporter=get_metric_exporter())
+meter_provider = MeterProvider(resource=resources, metric_readers=[metric_reader])
+metrics.set_meter_provider(meter_provider=meter_provider)
+
+# xxx
 provider = LoggerProvider()
 processor = BatchLogRecordProcessor(ConsoleLogExporter())
 provider.add_log_record_processor(processor)
@@ -53,38 +68,3 @@ handler = LoggingHandler(level=logging.INFO, logger_provider=provider)
 logging.basicConfig(handlers=[handler], level=logging.INFO)
 
 logging.info("This is an OpenTelemetry log record!")
-
-# 4
-# Service name is required for most backends
-resource = Resource.create(attributes={SERVICE_NAME: "your-service-name"})
-
-tracerProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="<traces-endpoint>/v1/traces"))
-tracerProvider.add_span_processor(processor)
-trace.set_tracer_provider(tracerProvider)
-
-reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint="<traces-endpoint>/v1/metrics"))
-meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
-metrics.set_meter_provider(meterProvider)
-
-tracerProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(ConsoleSpanExporter())
-tracerProvider.add_span_processor(processor)
-trace.set_tracer_provider(tracerProvider)
-
-reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
-metrics.set_meter_provider(meterProvider)
-
-# 5
-tracerProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(ConsoleSpanExporter())
-tracerProvider.add_span_processor(processor)
-trace.set_tracer_provider(tracerProvider)
-
-reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
-metrics.set_meter_provider(meterProvider)
-
-# 6
-processor = SimpleSpanProcessor(OTLPSpanExporter(endpoint="your-endpoint-here"))
