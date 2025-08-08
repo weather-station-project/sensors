@@ -12,6 +12,10 @@ gpiozero = "~=2.0"
 aiohttp = "~=3.0"
 tenacity = "~=9.0"
 python-socketio = {extras = ["client"], version = "~=5.0"}
+opentelemetry-api = "~=1.0"
+opentelemetry-sdk = "~=1.0"
+opentelemetry-semantic-conventions = "*"
+opentelemetry-exporter-otlp-proto-http = "~=1.0"
 
 [dev-packages]
 black = "~=24.0"
