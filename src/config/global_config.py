@@ -206,9 +206,34 @@ class DeviceConfig:
         return self.__rain_gauge_port
 
 
+class OtelConfig:
+    __slots__ = ["__root_url", "__debug_in_console", "_attrs"]
+
+    def __init__(self) -> None:
+        self.__root_url = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+        self.__debug_in_console = get_bool_from_string(os.environ.get("OTEL_DEBUG_IN_CONSOLE", "False"))
+        self._attrs = {
+            "service.name": "wsp-sensors",
+            "service.version": os.environ.get("OTEL_SERVICE_VERSION", "0.0.0"),
+            "deployment.environment": os.environ.get("OTEL_DEPLOYMENT_ENVIRONMENT", "localhost"),
+        }
+
+    @property
+    def root_url(self) -> str:
+        return self.__root_url
+
+    @property
+    def debug_in_console(self) -> bool:
+        return self.__debug_in_console
+
+    @property
+    def attrs(self) -> dict[str, str]:
+        return self._attrs
+
+
 @final
 class GlobalConfig:
-    __slots__ = ["__environment", "__log", "__api", "__socket", "__device"]
+    __slots__ = ["__environment", "__log", "__api", "__socket", "__device", "__otel"]
 
     def __init__(self) -> None:
         self.__environment = Environment()
@@ -216,6 +241,7 @@ class GlobalConfig:
         self.__api = ApiConfig()
         self.__socket = SocketConfig()
         self.__device = DeviceConfig()
+        self.__otel = OtelConfig()
 
     @property
     def environment(self) -> Environment:
@@ -236,6 +262,10 @@ class GlobalConfig:
     @property
     def device(self) -> DeviceConfig:
         return self.__device
+
+    @property
+    def otel(self) -> OtelConfig:
+        return self.__otel
 
 
 global_config = GlobalConfig()
