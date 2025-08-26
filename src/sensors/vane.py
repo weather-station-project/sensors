@@ -1,6 +1,7 @@
+import logging
+
 from gpiozero import MCP3008
 
-from src.colored_logging.colored_logging import get_logger
 from src.model.models import WindDirection
 
 
@@ -33,7 +34,7 @@ class Vane(object):
     )
 
     def __init__(self) -> None:
-        self.__logger = get_logger(name=self.__class__.__name__)
+        self.__logger = logging.getLogger(name=self.__class__.__name__)
         self.__mcp_chip = MCP3008(channel=self.__CHANNEL)
 
     def get_direction(self) -> str:

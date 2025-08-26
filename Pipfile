@@ -4,14 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-colorlog = "~=6.0"
 requests = "~=2.0"
 rpi-bme280 = "~=0.0"
 "w1thermsensor[async]" = "~=2.0"
 gpiozero = "~=2.0"
 aiohttp = "~=3.0"
 tenacity = "~=9.0"
-python-socketio = {extras = ["client"], version = "~=5.0"}
+python-socketio = { extras = ["client"], version = "~=5.0" }
 opentelemetry-api = "~=1.0"
 opentelemetry-sdk = "~=1.0"
 opentelemetry-semantic-conventions = "*"

@@ -1,4 +1,5 @@
 import json
+import logging
 from abc import ABC
 from http import HTTPStatus
 from typing import List
@@ -8,7 +9,6 @@ import socketio
 from socketio import exceptions
 from tenacity import retry, stop_after_attempt, wait_random
 
-from src.colored_logging.colored_logging import get_logger
 from src.model.models import Measurement
 
 NUMBER_OF_ATTEMPTS: int = 3
@@ -20,7 +20,7 @@ class Client(ABC):
     __slots__ = ["__auth_url", "__user", "__password", "_logger", "__token"]
 
     def __init__(self, auth_url: str, user: str, password: str) -> None:
-        self._logger = get_logger(name=self.__class__.__name__)
+        self._logger = logging.getLogger(name=self.__class__.__name__)
 
         self.__auth_url = auth_url
         self.__user = user

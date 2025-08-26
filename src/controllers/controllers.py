@@ -1,6 +1,6 @@
+import logging
 from abc import ABC
 
-from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.model.models import Measurement
 from src.services.services import Service, AirMeasurementService, GroundTemperatureService, RainfallService, WindMeasurementService
@@ -13,7 +13,7 @@ class Controller(ABC):
         self.__service = service
         self.__api_endpoint = api_endpoint
         self.__socket_event = socket_event
-        self.__logger = get_logger(name=self.__class__.__name__)
+        self.__logger = logging.getLogger(name=self.__class__.__name__)
 
         self.__logger.debug(
             msg=f"Controller initialized with the service {self.__service.__class__.__name__}"

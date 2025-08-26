@@ -1,8 +1,8 @@
 import asyncio
+import logging
 from typing import List
 
 from src.clients.clients import ApiClient, SocketClient
-from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.controllers.controllers import (
     Controller,
@@ -13,7 +13,7 @@ from src.controllers.controllers import (
 )
 from src.model.models import Measurement
 
-logger = get_logger(name="main")
+logger = logging.getLogger(name="main")
 
 
 def get_enabled_controllers() -> List[Controller]:
@@ -95,7 +95,8 @@ async def main() -> int:
         exit_code = 1
     finally:
         logger.info(msg="Application finished")
-        return exit_code
+
+    return exit_code
 
 
 if __name__ == "__main__":

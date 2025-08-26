@@ -1,11 +1,12 @@
 import logging
 
 from opentelemetry import trace, metrics
-from opentelemetry._logs import set_logger_provider, get_logger
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor, ConsoleLogExporter
+from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor, ConsoleLogExporter, LogExporter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.export import MetricExporter
 from opentelemetry.sdk.metrics.export import (
@@ -23,8 +24,6 @@ from src.config.global_config import global_config
 #  https://opentelemetry.io/docs/languages/python/
 #  https://opentelemetry.io/docs/concepts/semantic-conventions/
 #  https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation#readme
-
-
 def get_processor() -> BatchSpanProcessor:
     if global_config.otel.debug_in_console:
         return BatchSpanProcessor(ConsoleSpanExporter())
@@ -39,6 +38,13 @@ def get_metric_exporter() -> MetricExporter:
     return OTLPMetricExporter(endpoint=f"{global_config.otel.root_url}/v1/metrics")
 
 
+def get_log_exporter() -> LogExporter:
+    if global_config.otel.debug_in_console:
+        return ConsoleLogExporter()
+
+    return OTLPLogExporter(endpoint=f"{global_config.otel.root_url}/v1/logs")
+
+
 resources: Resource = Resource.create(
     attributes={
         SERVICE_NAME: global_config.otel.attrs[SERVICE_NAME],
@@ -47,24 +53,20 @@ resources: Resource = Resource.create(
     }
 )
 
+# Traces
 tracer_provider = TracerProvider(resource=resources)
 tracer_provider.add_span_processor(span_processor=get_processor())
-trace.set_tracer_provider(tracer_provider)
+trace.set_tracer_provider(tracer_provider=tracer_provider)
 
+# Metrics
 metric_reader = PeriodicExportingMetricReader(exporter=get_metric_exporter())
 meter_provider = MeterProvider(resource=resources, metric_readers=[metric_reader])
 metrics.set_meter_provider(meter_provider=meter_provider)
 
-# xxx
-provider = LoggerProvider()
-processor = BatchLogRecordProcessor(ConsoleLogExporter())
-provider.add_log_record_processor(processor)
-# Sets the global default logger provider
-set_logger_provider(provider)
+# Logs
+logger_provider = LoggerProvider(resource=resources)
+set_logger_provider(logger_provider=logger_provider)
 
-logger = get_logger(__name__)
-
-handler = LoggingHandler(level=logging.INFO, logger_provider=provider)
-logging.basicConfig(handlers=[handler], level=logging.INFO)
-
-logging.info("This is an OpenTelemetry log record!")
+logger_provider.add_log_record_processor(log_record_processor=BatchLogRecordProcessor(exporter=get_log_exporter()))
+logging.getLogger().setLevel(level=logging.getLevelName(global_config.log.level.upper()))
+logging.getLogger().addHandler(LoggingHandler(level=logging.getLevelName(global_config.log.level.upper()), logger_provider=logger_provider))
