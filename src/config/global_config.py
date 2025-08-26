@@ -214,7 +214,7 @@ class OtelConfig:
         self.__debug_in_console = get_bool_from_string(os.environ.get("OTEL_DEBUG_IN_CONSOLE", "False"))
         self._attrs = {
             "service.name": "wsp-sensors",
-            "service.version": os.environ.get("OTEL_SERVICE_VERSION", "0.0.0"),
+            "service.version": os.environ.get("OTEL_SERVICE_VERSION", "0.0.1"),
             "deployment.environment": os.environ.get("OTEL_DEPLOYMENT_ENVIRONMENT", "localhost"),
         }
 
