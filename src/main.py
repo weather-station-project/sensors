@@ -2,6 +2,8 @@ import asyncio
 import logging
 from typing import List
 
+from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
+
 from src.clients.clients import ApiClient, SocketClient
 from src.config.global_config import global_config
 from src.controllers.controllers import (
@@ -14,6 +16,7 @@ from src.controllers.controllers import (
 from src.instrumentation import logger_provider, meter_provider, tracer_provider
 from src.model.models import Measurement
 
+AsyncioInstrumentor().instrument()
 logger = logging.getLogger(name="main")
 
 
