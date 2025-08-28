@@ -1,8 +1,10 @@
 import asyncio
+import logging
 from typing import List
 
+from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
+
 from src.clients.clients import ApiClient, SocketClient
-from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.controllers.controllers import (
     Controller,
@@ -11,9 +13,11 @@ from src.controllers.controllers import (
     RainfallController,
     WindMeasurementController,
 )
+from src.instrumentation import logger_provider, meter_provider, tracer_provider
 from src.model.models import Measurement
 
-logger = get_logger(name="main")
+AsyncioInstrumentor().instrument()
+logger = logging.getLogger(name="main")
 
 
 def get_enabled_controllers() -> List[Controller]:
@@ -39,7 +43,6 @@ def get_enabled_controllers() -> List[Controller]:
 
 
 async def main() -> int:
-    exit_code = 0
     api_client = ApiClient(auth_url=global_config.api.auth_url, user=global_config.api.user, password=global_config.api.password)
     socket_client = SocketClient(
         socket_url=global_config.socket.socket_url,
@@ -95,7 +98,11 @@ async def main() -> int:
         exit_code = 1
     finally:
         logger.info(msg="Application finished")
-        return exit_code
+        logger_provider.shutdown()
+        meter_provider.shutdown()
+        tracer_provider.shutdown()
+
+    return exit_code
 
 
 if __name__ == "__main__":

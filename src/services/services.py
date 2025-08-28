@@ -1,17 +1,17 @@
 import asyncio
+import logging
+import random
 from abc import ABC, abstractmethod
 from datetime import datetime
 from statistics import mode, mean
 from typing import List
 
 import bme280
-import random
 import smbus2
 from bme280 import compensated_readings
 from gpiozero import Button
 from w1thermsensor import AsyncW1ThermSensor, Unit
 
-from src.colored_logging.colored_logging import get_logger
 from src.config.global_config import global_config
 from src.model.models import Measurement, WindDirection
 from src.sensors.anemometer import Anemometer
@@ -24,7 +24,7 @@ class Service(ABC):
     __slots__ = ["__readings", "__getting_readings", "_logger"]
 
     def __init__(self) -> None:
-        self._logger = get_logger(name=self.__class__.__name__)
+        self._logger = logging.getLogger(name=self.__class__.__name__)
 
         self.__readings = []
         self.__getting_readings = False
