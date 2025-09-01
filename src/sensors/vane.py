@@ -46,12 +46,15 @@ class Vane(object):
         return self.__get_direction_by_gpio_value(value=gpio_value)
 
     def __get_direction_by_gpio_value(self, value: float) -> str:
-        last_direction = self.__UNKNOWN_WIND_DIRECTION
+        last_direction: str = self.__UNKNOWN_WIND_DIRECTION
 
         for gpio_item_value, direction in self.__VANE_ANGLES_AND_DIRECTIONS_TABLE:
+            gpio_item_value: float
+            direction: WindDirection
+
             if value < gpio_item_value:
                 return last_direction
 
-            last_direction = direction
+            last_direction = direction.value
 
         return last_direction
