@@ -6,7 +6,7 @@ from typing import List
 
 import aiohttp
 import socketio
-from socketio import exceptions
+from socketio import exceptions, AsyncClient
 from tenacity import retry, stop_after_attempt, wait_random
 
 from src.model.models import Measurement
@@ -80,35 +80,43 @@ class SocketClient(Client):
         super().__init__(auth_url=auth_url, user=user, password=password)
 
         self.__socket_url = socket_url
-        self.__client = socketio.Client(ssl_verify=False)
+        self.__client: AsyncClient | None = None
 
-    @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
-        @self.__client.on(event="connect")
-        def connection_handler() -> None:
+    def __make_client(self) -> None:
+        self.__client = socketio.AsyncClient(ssl_verify=False)
+
+        @self.__client.event
+        async def connect() -> None:
             self._logger.debug(msg=f"Socket connected to the server {self.__socket_url}")
 
-        @self.__client.on(event="disconnect")
-        def disconnect_handler(reason) -> None:
+        @self.__client.event
+        async def disconnect(reason) -> None:
             self._logger.debug(msg=f"Socket disconnected with reason '{reason}'")
 
+        @self.__client.event
+        async def connect_error(error) -> None:
+            self._logger.debug(msg=f"Socket connection error with error '{error}'")
+
         @self.__client.on(event="exception")
-        def exception_handler(msg: str) -> None:
+        async def exception_handler(msg: str) -> None:
             if "Invalid token" in msg:
                 self._logger.debug("Token expired, resetting token")
                 self._reset_token()
             else:
                 self._logger.error(msg=f"Exception received from the server with message {msg}")
 
+    @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
+    async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
         try:
             token: str = await self._get_token()
-            self.__client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"])
+            self.__make_client()
+            await self.__client.connect(url=self.__socket_url, headers={"Authorization": f"Bearer {token}"}, transports=["websocket"], wait=True)
 
             if not self.__client.connected:
                 raise exceptions.ConnectionError()
 
             for event, measurement in tuples_event_measurement:
-                self.__client.call(event=event, data=json.dumps(obj=measurement.to_dict()))
+                await self.__client.call(event=event, data=json.dumps(obj=measurement.to_dict()))
                 self._logger.info(msg=f"Measurement passed through the event {event} correctly")
         except socketio.exceptions.ConnectionError as e:
             self._logger.error(msg=f"Socket not connected to the server {self.__socket_url}", exc_info=e)
@@ -118,4 +126,5 @@ class SocketClient(Client):
             raise
         finally:
             if self.__client.connected:
-                self.__client.disconnect()
+                await self.__client.shutdown()
+            self.__client = None
