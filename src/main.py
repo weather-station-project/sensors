@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List
 
 from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
 
@@ -20,8 +19,8 @@ AsyncioInstrumentor().instrument()
 logger = logging.getLogger(name="main")
 
 
-def get_enabled_controllers() -> List[Controller]:
-    controllers: List[Controller] = []
+def get_enabled_controllers() -> list[Controller]:
+    controllers: list[Controller] = []
 
     if global_config.device.bme280_sensor_enabled:
         logger.info(msg=f"Adding {AirMeasurementsController.__name__}")
@@ -55,7 +54,7 @@ async def main() -> int:
         logger.info(msg="Application started")
 
         logger.info(msg="Getting controllers to be initiated")
-        controllers: List[Controller] = get_enabled_controllers()
+        controllers: list[Controller] = get_enabled_controllers()
         logger.debug(msg=f"Controllers to be initiated: {[controller.__class__.__name__ for controller in controllers]}")
 
         if len(controllers) == 0:
@@ -73,15 +72,15 @@ async def main() -> int:
             await asyncio.sleep(delay=seconds_waiting)
 
             try:
-                measurements: List[Measurement] = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
+                measurements: list[Measurement] = await asyncio.gather(*(controller.get_measurement() for controller in controllers))
 
                 if global_config.environment.read_only:
                     logger.info(msg="Read only mode enabled. Measurements will not be added nor emitted")
                 else:
-                    tuples_endpoint_measurement: List[tuple[str, Measurement]] = [
+                    tuples_endpoint_measurement: list[tuple[str, Measurement]] = [
                         (controller.api_endpoint, measurement) for controller, measurement in zip(controllers, measurements)
                     ]
-                    tuples_event_measurement: List[tuple[str, Measurement]] = [
+                    tuples_event_measurement: list[tuple[str, Measurement]] = [
                         (controller.socket_event, measurement) for controller, measurement in zip(controllers, measurements)
                     ]
                     await asyncio.gather(

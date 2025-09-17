@@ -4,7 +4,6 @@ import random
 from abc import ABC, abstractmethod
 from datetime import datetime
 from statistics import mode, mean
-from typing import List
 
 import bme280
 import smbus2
@@ -32,7 +31,7 @@ class Service(ABC):
         asyncio.create_task(coro=self._add_value_to_readings())
 
     @property
-    def readings(self) -> List[Measurement]:
+    def readings(self) -> list[Measurement]:
         return self.__readings
 
     @property

@@ -2,7 +2,6 @@ import json
 import logging
 from abc import ABC
 from http import HTTPStatus
-from typing import List
 
 import aiohttp
 import socketio
@@ -50,7 +49,7 @@ class Client(ABC):
 
 
 class ApiClient(Client):
-    async def add_measurements(self, tuples_endpoint_measurement: List[tuple[str, Measurement]]) -> None:
+    async def add_measurements(self, tuples_endpoint_measurement: list[tuple[str, Measurement]]) -> None:
         try:
             async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
                 for end_point, measurement in tuples_endpoint_measurement:
@@ -106,7 +105,7 @@ class SocketClient(Client):
                 self._logger.error(msg=f"Exception received from the server with message {msg}")
 
     @retry(reraise=True, stop=(stop_after_attempt(NUMBER_OF_ATTEMPTS)), wait=wait_random(min=WAITING_TIME_MIN, max=WAITING_TIME_MAX))
-    async def emit_measurements(self, tuples_event_measurement: List[tuple[str, Measurement]]) -> None:
+    async def emit_measurements(self, tuples_event_measurement: list[tuple[str, Measurement]]) -> None:
         try:
             token: str = await self._get_token()
             self.__make_client()
